@@ -34,47 +34,63 @@ class MacroBehaviour(AbstractHexagonBehaviour):
         self.center_cluster_location = agent_location
         self.is_synchronization = False
 
-    def define_center_cluster_location(self, messages: dict) -> None:
-        center_cluster_locations = [message[1] for _, message in messages.items() if message[0] == self.cluster_id]
-
-        cluster_location = Hexagon2DLocation(0, 0)
-        for location in center_cluster_locations:
-            cluster_location += location
-        cluster_location //= len(center_cluster_locations)
-
-        self.center_cluster_location = cluster_location
-        self.is_synchronization = True
-
-    def define_cluster_area(self, messages: dict) -> None:
-        pass
-
-    def define_cluster_target(self, messages) -> None:
-        pass
-
-    def do_action(self) -> None:
-        if self.is_synchronization:
-            self.move()
-
-    def get_message(self) -> list:
-        return [self.cluster_id, self.center_cluster_location]
-
-    def rec_messages(self, messages: dict) -> None:
+    def compute_action(self) -> None:
         if not self.is_synchronization:
-            self.define_center_cluster_location(messages)
-        self.update_next_move()
+            self.define_center_cluster_location(self.messages)
 
-    def move(self) -> None:
-        self.agent_location += self.next_move
-        self.center_cluster_location += self.center_cluster_location.compute_move(self.target_location)
+        self.compute_next_move()
+        if self.walls.count(self.agent_location + self.next_move) > 0:
+            self.obstacle_avoidance()
 
-    def update_next_move(self):
-        self.next_move = self.agent_location.compute_move(
-            self.target_location - self.center_cluster_location + self.agent_location
-        )
-        if self.walls.count(self.next_move + self.agent_location) > 0:
-            self.correct_next_move()
+    def compute_next_move(self):
+        if self.is_random_move:
+            self.next_move = self.agent_location.get_random_move()
+        elif self.center_cluster_location == self.target_location:
+            self.next_move = Hexagon2DLocation(0, 0)
+        else:
+            self.next_move = self.agent_location.compute_move(
+                self.target_location - self.center_cluster_location + self.agent_location
+            )
 
     def correct_next_move(self) -> None:
+        if self.center_cluster_location == self.target_location:
+            self.next_move = self.agent_location.compute_move(self.center_cluster_location)
+
+        if self.walls.count(self.next_move + self.agent_location) > 0:
+            self.obstacle_avoidance()
+
+    def define_center_cluster_location(self, messages: dict) -> None:
+        if len(messages) == 0:
+            return
+
+        agent_locations = [message[0] for _, message in messages.items()]
+
+        new_center_cluster_location = Hexagon2DLocation(0, 0)
+        for location in agent_locations:
+            new_center_cluster_location += location
+        new_center_cluster_location //= len(agent_locations)
+
+        self.center_cluster_location = new_center_cluster_location
+        self.is_synchronization = True
+
+    def do_action(self) -> None:
+        if self.num_penalty_step < 0:
+            self.num_penalty_step = 0
+        elif self.num_penalty_step != 0:
+            self.num_penalty_step -= 1
+            self.is_random_move = True
+        else:
+            self.move()
+            self.is_random_move = False
+
+    def get_message(self) -> list:
+        return [self.agent_location]
+
+    def move(self) -> None:
+        self.previous_location = self.agent_location
+        self.agent_location += self.next_move
+
+    def obstacle_avoidance(self) -> None:
         possible_moves = [
             move
             for move in self.agent_location.get_possible_moves()
@@ -85,12 +101,21 @@ class MacroBehaviour(AbstractHexagonBehaviour):
         self.next_move *= -1
         for move in possible_moves:
             if self.target_location.get_distance(
-                self.agent_location + self.next_move
+                    self.agent_location + self.next_move
             ) > self.target_location.get_distance(self.agent_location + move):
                 self.next_move = move
             elif self.target_location.get_distance(
-                self.agent_location + self.next_move
+                    self.agent_location + self.next_move
             ) == self.target_location.get_distance(self.agent_location + move):
                 random_number = random()
                 if random_number > 0.5:
                     self.next_move = move
+
+    def rec_messages(self, messages: dict) -> None:
+        self.messages = messages
+
+    def reset(self) -> None:
+        self.is_synchronization = False
+
+    def define_cluster_target(self, messages) -> None:
+        pass

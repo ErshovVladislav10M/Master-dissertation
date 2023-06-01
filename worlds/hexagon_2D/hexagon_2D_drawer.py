@@ -43,7 +43,7 @@ class Hexagon2DDrawer:
             "aliceblue",
             "darkred",
             "tomato",
-            "royalblue"
+            "royalblue",
         ]
         self.draw_center_cluster_label = []
         self.draw_center_cluster_location = []
@@ -53,8 +53,9 @@ class Hexagon2DDrawer:
         self.diameter = []
         self.radius_centers = 0.7
 
-    def draw_plane(self, step: int):
-        figure = plt.figure(figsize=(6, 6))
+    def draw_plane(self, num_steps: int, step: int):
+        figure = plt.figure(figsize=(8, 8))
+        # figure = plt.figure(figsize=(6, 6))
         # sub_plot = figure.add_subplot(1, 2, 1)
         sub_plot = figure.add_subplot()
 
@@ -72,7 +73,7 @@ class Hexagon2DDrawer:
         self.draw_center_system(sub_plot)
         self.draw_agents(sub_plot)
 
-        plt.xlabel("Step number: " + str(step))
+        plt.xlabel("Step number: " + str(step), fontsize="xx-large")
         sub_plot.set(
             xlim=(-1.5 * math.sin(math.pi / 3), (self.num_of_titles_side + 1) * math.sin(math.pi / 3)),
             ylim=(-1.5, self.num_of_titles_side * math.sin(math.pi / 3)),
@@ -80,7 +81,7 @@ class Hexagon2DDrawer:
 
         plt.xticks([])
         plt.yticks([])
-        plt.legend(loc="best", ncol=2)
+        plt.legend(loc="upper right", ncol=2, fontsize="x-large")
 
         self.steps.append(step)
         self.accuracy.append(self.get_accuracy())
@@ -96,12 +97,13 @@ class Hexagon2DDrawer:
 
         plt.legend(loc="best")"""
 
-        f = open("accuracy.txt", "w")
-        f.write(str(self.accuracy))
-        f.close()
-        f = open("diameter.txt", "w")
-        f.write(str(self.diameter))
-        f.close()
+        if step == num_steps - 1:
+            f = open("accuracy.txt", "w")
+            f.write(str(self.accuracy))
+            f.close()
+            f = open("diameter.txt", "w")
+            f.write(str(self.diameter))
+            f.close()
 
         plt.savefig(f"./result/img/img_{step}.png", transparent=False, facecolor="white", dpi=300)
         plt.close()
@@ -247,7 +249,6 @@ class Hexagon2DDrawer:
             edgecolor="black",
             facecolor="white",
             label="Target",
-            hatch="|-"
         )
         sub_plot.add_patch(circle)
 
@@ -255,15 +256,24 @@ class Hexagon2DDrawer:
             xy=((location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3), location.row * 0.75),
             radius=self.radius_centers,
             edgecolor="black",
-            facecolor="white"
+            facecolor="white",
         )
         sub_plot.add_patch(dummy_circle)
 
-        sub_plot.vlines((location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3), location.row * 0.75 - self.radius_centers * 1.5,
-                        location.row * 0.75 + self.radius_centers * 1.5, color="black", linewidth=0.6)
-        sub_plot.hlines(location.row * 0.75, (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) - self.radius_centers * 1.5,
-                        (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) + self.radius_centers * 1.5, color="black",
-                        linewidth=0.6)
+        sub_plot.vlines(
+            (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3),
+            location.row * 0.75 - self.radius_centers * 1.5,
+            location.row * 0.75 + self.radius_centers * 1.5,
+            color="black",
+            linewidth=0.6,
+        )
+        sub_plot.hlines(
+            location.row * 0.75,
+            (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) - self.radius_centers * 1.5,
+            (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) + self.radius_centers * 1.5,
+            color="black",
+            linewidth=0.6,
+        )
 
     def draw_center_clusters(self, sup_plot):
         try:
@@ -277,7 +287,7 @@ class Hexagon2DDrawer:
                     radius=self.radius_centers,
                     edgecolor="black",
                     facecolor=self.colors[cluster_id],
-                    hatch="|||||"
+                    hatch="|||||",
                 )
 
                 if self.draw_center_cluster_location.count(cluster_id) == 0:
@@ -308,11 +318,14 @@ class Hexagon2DDrawer:
         for wall_location in self.walls:
 
             polygon = RegularPolygon(
-                xy=((wall_location.column + (wall_location.row % 2) / 2.0) * math.sin(math.pi / 3), wall_location.row * 0.75),
+                xy=(
+                    (wall_location.column + (wall_location.row % 2) / 2.0) * math.sin(math.pi / 3),
+                    wall_location.row * 0.75,
+                ),
                 numVertices=6,
                 radius=0.5,
                 edgecolor="lightgray",
-                facecolor="lightgray"
+                facecolor="lightgray",
             )
 
             sup_plot.add_patch(polygon)

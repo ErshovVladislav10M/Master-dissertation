@@ -26,21 +26,12 @@ class AbstractHexagonBehaviour(AbstractBehaviour, ABC):
         self.target_location = target_location
         self.previous_location = self.agent_location
         self.walls = walls
-        self.next_move = None
+        self.next_move = Hexagon2DLocation(0, 0)
         self.is_random_move = False
 
     @abstractmethod
     def define_center_cluster_location(self, messages: dict) -> None:
         """Define center cluster location for agent with algorithms with clustering.
-
-        :param messages: received messages
-        :type messages: dict
-        """
-        pass
-
-    @abstractmethod
-    def define_cluster_area(self, messages: dict) -> None:
-        """Define cluster area for agent with algorithms with clustering.
 
         :param messages: received messages
         :type messages: dict
@@ -57,16 +48,26 @@ class AbstractHexagonBehaviour(AbstractBehaviour, ABC):
         pass
 
     @abstractmethod
-    def move(self) -> None:
-        """Move agent to target."""
-        pass
-
-    @abstractmethod
-    def update_next_move(self) -> None:
+    def compute_next_move(self) -> None:
         """Update next move for agent."""
         pass
 
     @abstractmethod
     def correct_next_move(self) -> None:
+        """Correct next move from neighbour's q and move."""
+        pass
+
+    @abstractmethod
+    def move(self) -> None:
+        """Move agent to target."""
+        pass
+
+    @abstractmethod
+    def obstacle_avoidance(self) -> None:
         """Correct next move if there are walls on the hexagon plane."""
+        pass
+
+    @abstractmethod
+    def reset(self) -> None:
+        """Reset clustering settings."""
         pass

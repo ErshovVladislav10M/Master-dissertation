@@ -1,304 +1,481 @@
 import os
+import sys
 
-import imageio
-from PIL import Image
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QHBoxLayout,
+)
 
 from agents.simple_agent import SimpleAgent
-from behaviours.behaviour_3 import Behaviour3
-from behaviours.behaviour_meso import MesoBehaviour
 from behaviours.behaviour_macro import MacroBehaviour
+from behaviours.behaviour_meso import MesoBehaviour
 from behaviours.behaviour_micro import MicroBehaviour
 from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 from worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
+simulation_world_file: str
+simulation_world: Hexagon2DWorld
+num_of_tiles_side: int
+num_of_steps: int
+agents = []
+target: Hexagon2DLocation
+agent_strategy: str
+walls = []
 
-def setup_for_10_agents() -> None:
-    """10 agents, 2 clusters, 50 steps, world 24*24."""
-    num_steps = 70
-    target = Hexagon2DLocation(12, 4)
-    target_clusters = [Hexagon2DLocation(15, 4), Hexagon2DLocation(11, 4)]
+start_window: QMainWindow
+create_simulation_window: QMainWindow
+load_simulation_window: QMainWindow
+main_window: QMainWindow
+show_window: QMainWindow
 
-    agent_cluster_indexes = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
 
-    agents_locations = [
-        Hexagon2DLocation(18, 21),
-        Hexagon2DLocation(20, 23),
-        Hexagon2DLocation(18, 22),
-        Hexagon2DLocation(21, 21),
+class StartWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Multi-agent simulation application")
+        self.setFixedSize(QSize(400, 300))
 
-        Hexagon2DLocation(4, 21),
-        Hexagon2DLocation(3, 22),
-        Hexagon2DLocation(4, 18),
-        Hexagon2DLocation(5, 20),
-        Hexagon2DLocation(6, 19),
-        Hexagon2DLocation(3, 23)
-    ]
+        create_button = QPushButton("Create new simulation")
+        create_button.setFixedSize(250, 40)
+        create_button.clicked.connect(self.create_simulation)
 
-    cluster_radius = 5
+        load_button = QPushButton("Load existing simulation")
+        load_button.setFixedSize(250, 40)
+        load_button.clicked.connect(self.load_simulation)
 
-    walls = [
-        Hexagon2DLocation(14, 15),
-        Hexagon2DLocation(15, 15),
-        Hexagon2DLocation(16, 16),
-        Hexagon2DLocation(17, 16),
-        Hexagon2DLocation(18, 17),
-        Hexagon2DLocation(19, 17),
-        Hexagon2DLocation(20, 17),
-        Hexagon2DLocation(21, 16),
+        layout = QVBoxLayout()
+        layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        )
+        layout.addWidget(create_button)
+        layout.addWidget(load_button)
 
-        Hexagon2DLocation(3, 16),
-        Hexagon2DLocation(4, 17),
-        Hexagon2DLocation(5, 16),
-        Hexagon2DLocation(6, 16),
-        Hexagon2DLocation(7, 15),
-        Hexagon2DLocation(8, 15),
-        Hexagon2DLocation(9, 14),
-        Hexagon2DLocation(10, 14)
-    ]
+        container = QWidget()
+        container.setLayout(layout)
 
-    agents = []
-    for index in range(10):
-        behaviour = MicroBehaviour(index, agents_locations[index], target, walls)
-        agents.append(SimpleAgent(index, 0, behaviour))
-        """behaviour = MacroBehaviour(index, 0, agents_locations[index], target, [])
-        agents.append(SimpleAgent(index, 0, behaviour))"""
-        """if index < 4:
-            path = ["l", "l", "l", "l", "ld", "l", "l", "l", "l", "ld", "l", "l",
-                    "l", "l", "ld", "l", "l", "l", "ld"]
+        self.setCentralWidget(container)
+
+    @staticmethod
+    def create_simulation():
+        create_simulation_window.show()
+        start_window.hide()
+
+    @staticmethod
+    def load_simulation():
+        load_simulation_window.show()
+        start_window.hide()
+
+
+class CreateSimulationWindow(QMainWindow):
+    folder_path_line_edit: QLineEdit
+    file_name_line_edit: QLineEdit
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Create simulation")
+        self.setFixedSize(QSize(400, 300))
+
+        self.folder_path_line_edit = QLineEdit()
+        self.folder_path_line_edit.setFixedSize(250, 40)
+        self.folder_path_line_edit.setPlaceholderText(
+            "Enter the full path to the creation folder"
+        )
+
+        self.file_name_line_edit = QLineEdit()
+        self.file_name_line_edit.setFixedSize(250, 40)
+        self.file_name_line_edit.setPlaceholderText("Enter the file name")
+
+        create_button = QPushButton("Create simulation")
+        create_button.setFixedSize(250, 40)
+        create_button.clicked.connect(self.create_simulation)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        )
+        layout.addWidget(self.folder_path_line_edit)
+        layout.addWidget(self.file_name_line_edit)
+        layout.addWidget(create_button)
+
+        container = QWidget()
+        container.setLayout(layout)
+
+        self.setCentralWidget(container)
+
+    def create_simulation(self):
+        if os.path.exists(self.folder_path_line_edit.text()):
+            global simulation_world_file
+            simulation_world_file = os.path.join(
+                self.folder_path_line_edit.text(), self.file_name_line_edit.text()
+            )
+
+            main_window.show()
+            create_simulation_window.hide()
         else:
-            path = ["l", "lu", "l", "l", "lu", "l", "lu", "l", "l", "lu", "l", "l",
-                    "lu", "l", "l", "lu", "l", "l", "lu"]
-        behaviour = Behaviour3(
-            index, agent_cluster_indexes[index], agents_locations[index], target,
-            target_clusters[agent_cluster_indexes[index] - 1], path, []
+            print(self.folder_path_line_edit.text() + " does not exist")
+
+
+class LoadSimulationWindow(QMainWindow):
+    line_edit: QLineEdit
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Load simulation")
+        self.setFixedSize(QSize(400, 300))
+
+        self.line_edit = QLineEdit()
+        self.line_edit.setFixedSize(250, 40)
+        self.line_edit.setPlaceholderText(
+            "Enter the full path to the simulation world file"
         )
-        agents.append(SimpleAgent(index, agent_cluster_indexes[index], behaviour))"""
-        """behaviour = Behaviour3New(
-            index, agents_locations[index], cluster_radius, target, walls
+
+        create_button = QPushButton("Load simulation")
+        create_button.setFixedSize(250, 40)
+        create_button.clicked.connect(self.load_simulation)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
         )
-        agents.append(SimpleAgent(index, 0, behaviour))"""
+        layout.addWidget(self.line_edit)
+        layout.addWidget(create_button)
 
-    world = Hexagon2DWorld(24, agents, num_steps, [])
-    world.start()
+        container = QWidget()
+        container.setLayout(layout)
 
-    frames = [Image.open(f"./result/img/img_{step}.png") for step in range(num_steps)]
-    imageio.mimsave("result/simulation_10agents.gif", frames, fps=2)
-    os.system("result\\simulation_10agents.gif")
+        self.setCentralWidget(container)
 
+    def load_simulation(self):
+        if os.path.exists(self.line_edit.text()):
+            global simulation_world_file
+            simulation_world_file = self.line_edit.text()
 
-def setup_for_40_agents() -> None:
-    """40 agents, 3 clusters, 100 steps, world 100*100."""
-    num_steps = 160
-    target = Hexagon2DLocation(54, 10)
-    target_clusters = [Hexagon2DLocation(54, 13), Hexagon2DLocation(50, 6), Hexagon2DLocation(46, 13)]
-
-    agent_cluster_indexes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                             3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-
-    cluster_radius = 5
-
-    """agents_locations = [
-        Hexagon2DLocation(70, 83),
-        Hexagon2DLocation(71, 85),
-        Hexagon2DLocation(70, 82),
-        Hexagon2DLocation(69, 81),
-        Hexagon2DLocation(70, 79),
-        Hexagon2DLocation(73, 83),
-        Hexagon2DLocation(75, 85),
-        Hexagon2DLocation(72, 82),
-        Hexagon2DLocation(73, 81),
-        Hexagon2DLocation(74, 79),
-        Hexagon2DLocation(69, 83),
-        Hexagon2DLocation(67, 85),
-        Hexagon2DLocation(67, 82),
-        Hexagon2DLocation(69, 82),
-        Hexagon2DLocation(69, 79),
-
-        Hexagon2DLocation(50, 83),
-        Hexagon2DLocation(49, 85),
-        Hexagon2DLocation(50, 82),
-        Hexagon2DLocation(51, 81),
-        Hexagon2DLocation(50, 79),
-        Hexagon2DLocation(53, 83),
-        Hexagon2DLocation(52, 85),
-        Hexagon2DLocation(53, 82),
-        Hexagon2DLocation(52, 80),
-        Hexagon2DLocation(53, 79),
-        Hexagon2DLocation(45, 83),
-        Hexagon2DLocation(47, 85),
-        Hexagon2DLocation(45, 82),
-        Hexagon2DLocation(46, 80),
-        Hexagon2DLocation(45, 79),
-
-        Hexagon2DLocation(25, 83),
-        Hexagon2DLocation(25, 85),
-        Hexagon2DLocation(25, 82),
-        Hexagon2DLocation(23, 81),
-        Hexagon2DLocation(24, 79),
-        Hexagon2DLocation(23, 83),
-        Hexagon2DLocation(24, 85),
-        Hexagon2DLocation(26, 82),
-        Hexagon2DLocation(27, 80),
-        Hexagon2DLocation(26, 79),
-    ]"""
-
-    agents_locations = [
-        Hexagon2DLocation(68, 77),
-        Hexagon2DLocation(65, 85),
-        Hexagon2DLocation(71, 83),
-        Hexagon2DLocation(71, 80),
-        Hexagon2DLocation(66, 79),
-        Hexagon2DLocation(65, 79),
-        Hexagon2DLocation(70, 83),
-        Hexagon2DLocation(70, 79),
-        Hexagon2DLocation(70, 82),
-        Hexagon2DLocation(71, 82),
-        Hexagon2DLocation(64, 77),
-        Hexagon2DLocation(63, 79),
-        Hexagon2DLocation(62, 80),
-        Hexagon2DLocation(66, 83),
-        Hexagon2DLocation(64, 76),
-        Hexagon2DLocation(68, 76),
-        Hexagon2DLocation(66, 82),
-        Hexagon2DLocation(69, 82),
-        Hexagon2DLocation(67, 79),
-        Hexagon2DLocation(67, 77),
-
-        Hexagon2DLocation(48, 82),
-        Hexagon2DLocation(38, 81),
-        Hexagon2DLocation(44, 82),
-        Hexagon2DLocation(47, 83),
-        Hexagon2DLocation(38, 84),
-        Hexagon2DLocation(41, 80),
-        Hexagon2DLocation(44, 84),
-        Hexagon2DLocation(39, 85),
-        Hexagon2DLocation(45, 79),
-        Hexagon2DLocation(46, 81),
-        Hexagon2DLocation(38, 80),
-        Hexagon2DLocation(41, 78),
-        Hexagon2DLocation(47, 79),
-        Hexagon2DLocation(46, 78),
-        Hexagon2DLocation(40, 85),
-        Hexagon2DLocation(38, 82),
-        Hexagon2DLocation(44, 79),
-        Hexagon2DLocation(42, 85),
-        Hexagon2DLocation(44, 78),
-        Hexagon2DLocation(39, 82),
-    ]
-
-    walls = [
-        Hexagon2DLocation(58, 62),
-        Hexagon2DLocation(58, 63),
-        Hexagon2DLocation(59, 63),
-        Hexagon2DLocation(59, 64),
-        Hexagon2DLocation(60, 65),
-        Hexagon2DLocation(60, 66),
-        Hexagon2DLocation(61, 66),
-        Hexagon2DLocation(61, 67),
-        Hexagon2DLocation(62, 68),
-        Hexagon2DLocation(62, 69),
-        Hexagon2DLocation(63, 69),
-        Hexagon2DLocation(63, 70),
-        Hexagon2DLocation(64, 71),
-        Hexagon2DLocation(64, 72),
-        Hexagon2DLocation(65, 72),
-        Hexagon2DLocation(65, 73),
-        Hexagon2DLocation(66, 72),
-        Hexagon2DLocation(66, 71),
-        Hexagon2DLocation(67, 70),
-        Hexagon2DLocation(67, 69),
-        Hexagon2DLocation(68, 69),
-        Hexagon2DLocation(68, 68),
-        Hexagon2DLocation(69, 67),
-        Hexagon2DLocation(69, 66),
-        # Hexagon2DLocation(70, 66),
-        # Hexagon2DLocation(70, 65),
-        # Hexagon2DLocation(71, 64),
-        # Hexagon2DLocation(71, 63),
-        # Hexagon2DLocation(72, 63),
-        # Hexagon2DLocation(72, 62),
-
-        # Hexagon2DLocation(38, 62),
-        # Hexagon2DLocation(38, 63),
-        # Hexagon2DLocation(39, 63),
-        # Hexagon2DLocation(39, 64),
-        # Hexagon2DLocation(40, 65),
-        # Hexagon2DLocation(40, 66),
-        Hexagon2DLocation(41, 66),
-        Hexagon2DLocation(41, 67),
-        Hexagon2DLocation(42, 68),
-        Hexagon2DLocation(42, 69),
-        Hexagon2DLocation(43, 69),
-        Hexagon2DLocation(43, 70),
-        Hexagon2DLocation(44, 71),
-        Hexagon2DLocation(44, 72),
-        Hexagon2DLocation(45, 72),
-        Hexagon2DLocation(45, 73),
-        Hexagon2DLocation(46, 72),
-        Hexagon2DLocation(46, 71),
-        Hexagon2DLocation(47, 70),
-        Hexagon2DLocation(47, 69),
-        Hexagon2DLocation(48, 69),
-        Hexagon2DLocation(48, 68),
-        Hexagon2DLocation(49, 67),
-        Hexagon2DLocation(49, 66),
-        Hexagon2DLocation(50, 66),
-        Hexagon2DLocation(50, 65),
-        Hexagon2DLocation(51, 64),
-        Hexagon2DLocation(51, 63),
-        Hexagon2DLocation(52, 63),
-        Hexagon2DLocation(52, 62),
-    ]
-
-    agents = []
-    for index in range(40):
-        """behaviour = MicroBehaviour(index, agents_locations[index], target, walls)
-        agents.append(SimpleAgent(index, 0, behaviour))"""
-        """behaviour = Behaviour2(index, 0, agents_locations[index], target)
-        agents.append(SimpleAgent(index, 0, behaviour))"""
-        """if index < 15:
-            path = ["l", "l", "l", "l", "ld", "l", "l", "l", "l", "ld", "l", "l",
-                    "l", "l", "ld", "l", "l", "l", "l", "ld", "l", "l", "l", "l",
-                    "ld", "l", "l", "l", "l", "ld", "l", "l", "l", "ld", "l", "l",
-                    "l", "l", "ld", "l", "l", "l", "l", "ld", "l", "l", "l", "l",
-                    "l", "l", "ld", "l", "l", "l", "l", "ld", "l", "l", "l", "l",
-                    "ld", "l", "l", "l", "l", "ld", "l", "l", "l", "l", "ld", "l",
-                    "l", "ld", "l", "ld", "l"]
-        elif index < 30:
-            path = ["l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l", "l", "lu", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l",
-                    "l", "l", "l", "l"]
+            main_window.show()
+            main_window.reload_options()
+            load_simulation_window.hide()
         else:
-            path = ["l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "l", "l", "l", "lu", "l", "l", "l", "lu", "l", "l", "l", "lu",
-                    "lu", "l", "lu", "l", "lu", "l", "lu"]
-        behaviour = Behaviour3(
-            index, agent_cluster_indexes[index], agents_locations[index], target,
-            target_clusters[agent_cluster_indexes[index] - 1], path
-        )
-        agents.append(SimpleAgent(index, agent_cluster_indexes[index], behaviour))"""
-        behaviour = MesoBehaviour(
-            index, agents_locations[index], cluster_radius, target, walls
-        )
-        agents.append(SimpleAgent(index, 0, behaviour))
+            print(self.line_edit.text() + " does not exist")
 
-    world = Hexagon2DWorld(100, agents, num_steps, walls)
-    world.start()
 
-    frames = [Image.open(f"./result/img/img_{step}.png") for step in range(num_steps)]
-    imageio.mimsave("result/simulation_40agents.gif", frames, fps=2)
-    os.system("result\\simulation_40agents.gif")
+class MainWindow(QMainWindow):
+    size_world_line_edit: QLineEdit
+    number_of_steps_line_edit: QLineEdit
+    agent_locations_line_edit: QLineEdit
+    target_location_line_edit: QLineEdit
+    types_of_strategies_line_edit: QLineEdit
+    wall_locations_line_edit: QLineEdit
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Simulation options")
+        self.setFixedSize(QSize(800, 600))
+
+        self.size_world_line_edit = QLineEdit()
+        self.size_world_line_edit.setFixedSize(250, 40)
+        self.size_world_line_edit.setPlaceholderText(
+            "Enter the number of tiles of the side of the simulation world"
+        )
+
+        self.number_of_steps_line_edit = QLineEdit()
+        self.number_of_steps_line_edit.setFixedSize(250, 40)
+        self.number_of_steps_line_edit.setPlaceholderText(
+            "Enter the number of steps of the simulation world"
+        )
+
+        self.agent_locations_line_edit = QLineEdit()
+        self.agent_locations_line_edit.setFixedSize(250, 40)
+        self.agent_locations_line_edit.setPlaceholderText(
+            "Enter the agent locations (like: '(1, 3);(2, 6)')"
+        )
+
+        self.target_location_line_edit = QLineEdit()
+        self.target_location_line_edit.setFixedSize(250, 40)
+        self.target_location_line_edit.setPlaceholderText(
+            "Enter the target location (like: '(1, 3)')"
+        )
+
+        self.types_of_strategies_line_edit = QLineEdit()
+        self.types_of_strategies_line_edit.setFixedSize(250, 40)
+        self.types_of_strategies_line_edit.setPlaceholderText(
+            "Enter a strategy for agents (like: 'Micro', 'Macro', " "'Meso')"
+        )
+
+        self.wall_locations_line_edit = QLineEdit()
+        self.wall_locations_line_edit.setFixedSize(250, 40)
+        self.wall_locations_line_edit.setPlaceholderText(
+            "Enter the walls locations (like: '(1, 3);(2, 6)')"
+        )
+
+        reload_options_button = QPushButton("Reload options")
+        reload_options_button.setFixedSize(250, 40)
+        reload_options_button.clicked.connect(self.reload_options)
+
+        save_options_button = QPushButton("Save options")
+        save_options_button.setFixedSize(250, 40)
+        save_options_button.clicked.connect(self.save_options)
+
+        start_simulation_button = QPushButton("Start simulation")
+        start_simulation_button.setFixedSize(250, 40)
+        start_simulation_button.clicked.connect(self.start_simulation)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        )
+        layout.addWidget(self.size_world_line_edit)
+        layout.addWidget(self.number_of_steps_line_edit)
+        layout.addWidget(self.agent_locations_line_edit)
+        layout.addWidget(self.target_location_line_edit)
+        layout.addWidget(self.types_of_strategies_line_edit)
+        layout.addWidget(self.wall_locations_line_edit)
+        layout.addWidget(reload_options_button)
+        layout.addWidget(save_options_button)
+        layout.addWidget(start_simulation_button)
+
+        container = QWidget()
+        container.setLayout(layout)
+
+        self.setCentralWidget(container)
+
+    def reload_options(self):
+        try:
+            with open(simulation_world_file, "r") as file:
+                for line in file.readlines():
+                    if line.__contains__("num_of_tiles:"):
+                        self.size_world_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+                    elif line.__contains__("num_of_steps:"):
+                        self.number_of_steps_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+                    elif line.__contains__("agent_locations:"):
+                        self.agent_locations_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+                    elif line.__contains__("target_location:"):
+                        self.target_location_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+                    elif line.__contains__("type_of_strategy:"):
+                        self.types_of_strategies_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+                    elif line.__contains__("wall_locations:"):
+                        self.wall_locations_line_edit.setText(
+                            line.split(":")[1].replace("\n", "")
+                        )
+        except Exception:
+            print(Exception)
+
+    def save_options(self):
+        try:
+            with open(simulation_world_file, "w") as file:
+                file.write("num_of_tiles:" + self.size_world_line_edit.text() + "\n")
+                file.write(
+                    "num_of_steps:" + self.number_of_steps_line_edit.text() + "\n"
+                )
+                file.write(
+                    "agent_locations:" + self.agent_locations_line_edit.text() + "\n"
+                )
+                file.write(
+                    "target_location:" + self.target_location_line_edit.text() + "\n"
+                )
+                file.write(
+                    "type_of_strategy:"
+                    + self.types_of_strategies_line_edit.text()
+                    + "\n"
+                )
+                file.write(
+                    "wall_locations:" + self.wall_locations_line_edit.text() + "\n"
+                )
+        except Exception:
+            print(Exception)
+
+    def start_simulation(self):
+        try:
+            agent_locations = []
+
+            with open(simulation_world_file, "r") as file:
+                for line in file.readlines():
+                    if line.__contains__("num_of_tiles:"):
+                        global num_of_tiles_side
+                        num_of_tiles_side = int(line.split(":")[1])
+                    elif line.__contains__("num_of_steps:"):
+                        global num_of_steps
+                        num_of_steps = int(line.split(":")[1])
+                    elif line.__contains__("agent_locations:"):
+                        for agent in line.split(":")[1].split(";"):
+                            agent = agent.replace("(", "")
+                            agent = agent.replace(")", "")
+                            row, column = agent.split(",")
+                            agent_locations.append(
+                                Hexagon2DLocation(int(row), int(column))
+                            )
+                    elif line.__contains__("target_location:"):
+                        target_location = line.split(":")[1]
+                        target_location = target_location.replace("(", "")
+                        target_location = target_location.replace(")", "")
+                        row, column = target_location.split(",")
+                        global target
+                        target = Hexagon2DLocation(int(row), int(column))
+                    elif line.__contains__("type_of_strategy:"):
+                        global agent_strategy
+                        agent_strategy = line.split(":")[1]
+                    elif line.__contains__("wall_locations:"):
+                        global walls
+                        for wall in line.split(":")[1].split(";"):
+                            wall = wall.replace("(", "")
+                            wall = wall.replace(")", "")
+                            row, column = wall.split(",")
+                            walls.append(Hexagon2DLocation(int(row), int(column)))
+
+            self.create_agents(agent_locations)
+
+            global simulation_world
+            simulation_world = Hexagon2DWorld(
+                num_of_tiles_side=num_of_tiles_side,
+                agents=agents,
+                num_steps=num_of_steps,
+                walls=walls,
+            )
+            simulation_world.start()
+
+            show_window.show()
+            main_window.hide()
+        except Exception:
+            print(Exception)
+
+    @staticmethod
+    def create_agents(agent_locations: []) -> None:
+        global agents, target, agent_strategy
+        if agent_strategy == "Micro":
+            for index, agent_location in zip(
+                range(len(agent_locations)), agent_locations
+            ):
+                behaviour = MicroBehaviour(
+                    agent_id=index,
+                    agent_location=agent_location,
+                    target_location=target,
+                    walls=walls,
+                )
+                agents.append(
+                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                )
+        elif agent_strategy == "Macro":
+            for index, agent_location in zip(
+                range(len(agent_locations)), agent_locations
+            ):
+                behaviour = MacroBehaviour(
+                    agent_id=index,
+                    cluster_id=0,
+                    agent_location=agent_location,
+                    target_location=target,
+                    walls=[],
+                )
+                agents.append(
+                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                )
+        else:
+            for index, agent_location in zip(
+                range(len(agent_locations)), agent_locations
+            ):
+                behaviour = MesoBehaviour(
+                    agent_id=index,
+                    agent_location=agent_location,
+                    cluster_radius=5,
+                    target_location=target,
+                    walls=walls,
+                )
+                agents.append(
+                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                )
+
+
+class ShowWindow(QMainWindow):
+    image_label: QLabel
+    index = 0
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Show simulation")
+        self.setMinimumSize(QSize(800, 600))
+
+        self.image_label = QLabel()
+        self.image_label.setScaledContents(True)
+        self.image_label.setFixedSize(600, 600)
+        self.image_label.setPixmap(QPixmap(f"./result/img/img_{self.index}.png"))
+
+        next_button = QPushButton("Next step")
+        next_button.setFixedSize(250, 40)
+        next_button.clicked.connect(self.next_step)
+
+        previous_button = QPushButton("Previous step")
+        previous_button.setFixedSize(250, 40)
+        previous_button.clicked.connect(self.previous_step)
+
+        button_layout = QVBoxLayout()
+        button_layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        )
+        button_layout.addWidget(next_button)
+        button_layout.addWidget(previous_button)
+
+        layout = QHBoxLayout()
+        layout.setAlignment(
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        )
+        layout.addWidget(self.image_label)
+        layout.addLayout(button_layout)
+
+        container = QWidget()
+        container.setLayout(layout)
+
+        self.setCentralWidget(container)
+
+    def next_step(self):
+        if os.path.exists(f"./result/img/img_{self.index + 1}.png"):
+            self.index += 1
+        else:
+            print("This is last image")
+
+        try:
+            self.image_label.setPixmap(QPixmap(f"./result/img/img_{self.index}.png"))
+        except Exception:
+            print(Exception)
+
+    def previous_step(self):
+        if os.path.exists(f"./result/img/img_{self.index - 1}.png"):
+            self.index -= 1
+        else:
+            print("This is first image")
+
+        try:
+            self.image_label.setPixmap(QPixmap(f"./result/img/img_{self.index}.png"))
+        except Exception:
+            print(Exception)
 
 
 if __name__ == "__main__":
-    setup_for_10_agents()
-    # setup_for_40_agents()
+    app = QApplication(sys.argv)
+    app.setStyleSheet(
+        "QMainWindow{background-color: white; border: 1px solid lightgray;}"
+    )
+
+    start_window = StartWindow()
+    create_simulation_window = CreateSimulationWindow()
+    load_simulation_window = LoadSimulationWindow()
+    main_window = MainWindow()
+    show_window = ShowWindow()
+
+    start_window.show()
+
+    sys.exit(app.exec())

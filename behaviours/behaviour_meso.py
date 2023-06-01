@@ -40,13 +40,102 @@ class MesoBehaviour(AbstractHexagonBehaviour):
         self.cluster_id = 0
         self.is_cluster_definition = False
         self.center_cluster_location = agent_location
+        self.coefficient_trust = 1
+        self.coefficient_confidence = 0
 
-    def define_center_cluster_location(self, messages: dict) -> None:
-        pass
+    def compute_action(self) -> None:
+        if not self.is_cluster_definition:
+            self.define_clusters(self.messages)
+
+        self.compute_next_move()
+        if self.walls.count(self.agent_location + self.next_move) > 0:
+            self.obstacle_avoidance()
+
+    def compute_next_move(self) -> None:
+        if self.is_random_move:
+            self.coefficient_trust = 0
+            self.coefficient_confidence = 0
+            self.next_move = self.agent_location.get_random_move()
+        elif self.center_cluster_location == self.target_location:
+            self.next_move = Hexagon2DLocation(0, 0)
+        else:
+            self.next_move = self.agent_location.compute_move(
+                self.target_location - self.center_cluster_location + self.agent_location
+            )
+
+    """def correct_next_move(self) -> None:
+        # Поправка только от ближайшего обходящего препятствие
+        agent_behaviours = [
+            message[0]
+            for _, message in self.messages.items()
+            if message[0].cluster_id == self.cluster_id and message[0].agent_id != self.agent_id
+        ]
+
+        if self.coefficient_trust == 0 or len(agent_behaviours) == 0:
+            return
+
+        nearest_agent_behaviour = agent_behaviours[0]
+        for agent_behaviour in agent_behaviours:
+            if (
+                self.agent_location.get_distance(agent_behaviour.agent_location)
+                < self.agent_location.get_distance(nearest_agent_behaviour.agent_location)
+                and agent_behaviour.coefficient_confidence == 1
+            ):
+                nearest_agent_behaviour = agent_behaviour
+
+        if nearest_agent_behaviour.coefficient_confidence == 1:
+            self.next_move = nearest_agent_behaviour.next_move
+
+        if self.walls.count(self.agent_location + self.next_move) > 0:
+            self.obstacle_avoidance()"""
+
+    def correct_next_move(self) -> None:
+        # Берем от всех, но обратно пропорционально расстоянию между агентами
+        agent_behaviours = [
+            message[0]
+            for _, message in self.messages.items()
+            if message[0].cluster_id == self.cluster_id and message[0].agent_id != self.agent_id
+        ]
+
+        agent_next_move_in_degrees = self.agent_location.get_direction_in_degrees(
+            self.agent_location.get_direction_to_neighbour_location(self.agent_location + self.next_move)
+        )
+        group_next_move_in_degrees = agent_next_move_in_degrees
+
+        num_of_accepted_corrections = 0
+        for agent_behaviour in agent_behaviours:
+            agent_direction_in_degrees = agent_behaviour.agent_location.get_direction_in_degrees(
+                agent_behaviour.agent_location.get_direction_to_neighbour_location(
+                    agent_behaviour.agent_location + agent_behaviour.next_move
+                )
+            )
+            
+            group_next_move_in_degrees += (
+                (agent_next_move_in_degrees - agent_direction_in_degrees)
+                * agent_behaviour.coefficient_confidence
+                * self.coefficient_trust
+                / (self.agent_location.get_distance(agent_behaviour.agent_location) * 0.7) # 0.7 compute from expiremental
+            )
+            if agent_behaviour.coefficient_confidence != 0 and self.coefficient_trust != 0:
+                num_of_accepted_corrections += 1
+
+        group_next_move_in_degrees /= num_of_accepted_corrections + 1
+
+        group_next_move_direction = Hexagon2DLocation.get_direction_from_degrees(group_next_move_in_degrees)
+        self.next_move = self.agent_location.get_move(group_next_move_direction)
+
+        if self.center_cluster_location == self.target_location:
+            self.next_move = self.agent_location.compute_move(self.center_cluster_location)
+
+        if self.walls.count(self.agent_location + self.next_move) > 0:
+            self.obstacle_avoidance()
 
     """def define_clusters(self, messages: dict) -> None:
         # Жадный
-        max_cluster_id = max([message[0].cluster_id for _, message in messages.items()])
+        if len([message[0].cluster_id for _, message in messages.items()]) == 0:
+            max_cluster_id = 0
+        else:
+            max_cluster_id = max([message[0].cluster_id for _, message in messages.items()])
         self.cluster_id = max_cluster_id + 1
         self.is_cluster_definition = True
 
@@ -127,6 +216,12 @@ class MesoBehaviour(AbstractHexagonBehaviour):
                 behaviour.cluster_id = new_cluster_id
             new_cluster_id += 1
 
+        for behaviour in agent_behaviours:
+            if behaviour.cluster_id == 0:
+                behaviour.cluster_id = new_cluster_id
+                new_cluster_id += 1
+                behaviour.is_cluster_definition = True
+
     """def define_clusters(self, messages: dict) -> None:
         # Снизу вверх жадный
         agent_behaviours = [message[0] for _, message in messages.items()]
@@ -161,13 +256,10 @@ class MesoBehaviour(AbstractHexagonBehaviour):
             for behaviour in cluster:
                 behaviour.center_cluster_location = center_cluster_location"""
 
-    def define_cluster_area(self, messages: dict) -> None:
-        pass
-
-    def define_cluster_target(self, messages) -> None:
-        pass
-
     def do_action(self) -> None:
+        self.coefficient_trust = 1
+        self.coefficient_confidence = 0
+
         if not self.is_cluster_definition:
             return
         if self.num_penalty_step < 0:
@@ -182,11 +274,6 @@ class MesoBehaviour(AbstractHexagonBehaviour):
 
     def get_message(self) -> list:
         return [self]
-
-    def rec_messages(self, messages: dict) -> None:
-        if not self.is_cluster_definition:
-            self.define_clusters(messages)
-        self.update_next_move()
 
     def is_agent_in_cluster_radius(self, agent_location: Hexagon2DLocation, cluster_member_locations: list) -> bool:
         for location in cluster_member_locations:
@@ -205,18 +292,7 @@ class MesoBehaviour(AbstractHexagonBehaviour):
         self.previous_location = self.agent_location
         self.agent_location += self.next_move
 
-    def update_next_move(self) -> None:
-        if self.is_random_move:
-            self.next_move = self.agent_location.get_random_move()
-        else:
-            self.next_move = self.agent_location.compute_move(
-                self.target_location - self.center_cluster_location + self.agent_location
-            )
-
-        if self.walls.count(self.agent_location + self.next_move) > 0:
-            self.correct_next_move()
-
-    def correct_next_move(self) -> None:
+    def obstacle_avoidance(self) -> None:
         possible_moves = [
             move
             for move in self.agent_location.get_possible_moves()
@@ -236,3 +312,20 @@ class MesoBehaviour(AbstractHexagonBehaviour):
                 random_number = random()
                 if random_number > 0.5:
                     self.next_move = move
+
+        self.coefficient_trust = 0
+        self.coefficient_confidence = 1
+
+    def rec_messages(self, messages: dict) -> None:
+        self.messages = messages
+
+    def reset(self) -> None:
+        self.cluster_id = 0
+        self.is_cluster_definition = False
+        self.center_cluster_location = self.agent_location
+
+    def define_center_cluster_location(self, messages: dict) -> None:
+        pass
+
+    def define_cluster_target(self, messages) -> None:
+        pass

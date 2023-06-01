@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+import threading
 
 
-class AbstractWorld(ABC):
+class AbstractWorld(ABC, threading.Thread):
     """Abstract world-class."""
 
     def __init__(self, agents: list, num_steps: int, walls: list):
@@ -14,6 +15,7 @@ class AbstractWorld(ABC):
         :param walls: walls on world
         :type walls: list
         """
+        super().__init__()
         self.agents = agents
         self.num_steps = num_steps
         self.walls = walls
@@ -43,6 +45,6 @@ class AbstractWorld(ABC):
         pass
 
     @abstractmethod
-    def start(self) -> None:
+    def run(self) -> None:
         """Runs a simulation in this world."""
         pass

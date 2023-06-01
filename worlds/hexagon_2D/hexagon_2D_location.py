@@ -114,6 +114,61 @@ class Hexagon2DLocation(AbstractLocation):
 
         return Hexagon2DLocation(0, 0)
 
+    def get_direction_to_neighbour_location(self, other) -> str:
+        if self.row - other.row == 0 and self.column - other.column == 1:
+            return "l"
+        if self.row - other.row == -1 and self.row % 2 == 1 and self.column - other.column == 0:
+            return "lu"
+        if self.row - other.row == -1 and self.row % 2 == 0 and self.column - other.column == -1:
+            return "lu"
+        if self.row - other.row == -1 and self.row % 2 == 1 and self.column - other.column == -1:
+            return "ru"
+        if self.row - other.row == -1 and self.row % 2 == 0 and self.column - other.column == 0:
+            return "ru"
+        if self.row - other.row == 0 and self.column - other.column == -1:
+            return "r"
+        if self.row - other.row == 1 and self.row % 2 == 1 and self.column - other.column == -1:
+            return "rd"
+        if self.row - other.row == 1 and self.row % 2 == 0 and self.column - other.column == 0:
+            return "rd"
+        if self.row - other.row == 1 and self.row % 2 == 1 and self.column - other.column == 0:
+            return "ld"
+        if self.row - other.row == 1 and self.row % 2 == 0 and self.column - other.column == 1:
+            return "ld"
+        return "None"
+
+    @staticmethod
+    def get_direction_in_degrees(direction) -> int:
+        if direction == "l":
+            return 0
+        if direction == "lu":
+            return 60
+        if direction == "ru":
+            return 120
+        if direction == "r":
+            return 180
+        if direction == "rd":
+            return 240
+        if direction == "ld":
+            return 300
+        return 0
+
+    @staticmethod
+    def get_direction_from_degrees(degrees: int) -> str:
+        degrees %= 360
+        if 0 <= degrees <= 30 or degrees > 330:
+            return "l"
+        if 30 < degrees <= 90:
+            return "lu"
+        if 90 < degrees <= 150:
+            return "ru"
+        if 150 < degrees <= 210:
+            return "r"
+        if 210 < degrees <= 270:
+            return "rd"
+        if 270 < degrees <= 330:
+            return "ld"
+
     def get_distance(self, other) -> int:
         distance = 0
         location = Hexagon2DLocation(self.row, self.column)

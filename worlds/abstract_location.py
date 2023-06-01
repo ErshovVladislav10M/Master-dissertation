@@ -23,17 +23,17 @@ class AbstractLocation(ABC):
         pass
 
     @abstractmethod
-    def get_random_move(self):
-        """Get random move to one of the neighboring locations.
-
-        :return: random move to one of the neighboring locations
-        """
-        pass
-
-    @abstractmethod
     def get_possible_moves(self) -> list:
         """Get possible moves to all neighboring locations.
 
         :return: possible moves to all neighboring locations
+        """
+        pass
+
+    @abstractmethod
+    def get_random_move(self):
+        """Get random move to one of the neighboring locations.
+
+        :return: random move to one of the neighboring locations
         """
         pass
