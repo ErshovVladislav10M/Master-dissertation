@@ -5,7 +5,7 @@ import threading
 class AbstractWorld(ABC, threading.Thread):
     """Abstract world-class."""
 
-    def __init__(self, agents: list, num_steps: int, walls: list):
+    def __init__(self, agents: list, num_steps: int, walls: list, path_to_results: str, create_step_images: bool):
         """Creating an instance of a class with agents and number of steps.
 
         :param agents: agents that in this world
@@ -14,12 +14,18 @@ class AbstractWorld(ABC, threading.Thread):
         :type num_steps: int
         :param walls: walls on world
         :type walls: list
+        :param path_to_results: relative path to the folder with the results
+        :type path_to_results: str
+        :param create_step_images: whether to create pictures
+        :type create_step_images: bool
         """
         super().__init__()
         self.agents = agents
         self.num_steps = num_steps
         self.walls = walls
         self.all_messages = {}
+        self.path_to_results = path_to_results
+        self.create_step_images = create_step_images
 
     @abstractmethod
     def is_have_connection(self, agent1_id: int, agent2_id: int) -> bool:

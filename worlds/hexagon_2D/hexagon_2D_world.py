@@ -5,7 +5,7 @@ from worlds.hexagon_2D.hexagon_2D_drawer import Hexagon2DDrawer
 class Hexagon2DWorld(AbstractWorld):
     """Class world for storing the location of agents on a plane, consisting of regular hexagons."""
 
-    def __init__(self, num_of_tiles_side: int, agents: list, num_steps: int, walls: list):
+    def __init__(self, num_of_tiles_side: int, agents: list, num_steps: int, walls: list, path_to_results: str, create_step_images: bool):
         """Create world by number of tiles per side.
 
         :param num_of_tiles_side: number of tiles per side of a square
@@ -16,10 +16,14 @@ class Hexagon2DWorld(AbstractWorld):
         :type num_steps: int
         :param walls: walls on world
         :type walls: list
+        :param path_to_results: relative path to the folder with the results
+        :type path_to_results: str
+        :param create_step_images: whether to create pictures
+        :type create_step_images: bool
         """
-        super().__init__(agents, num_steps, walls)
+        super().__init__(agents, num_steps, walls, path_to_results, create_step_images)
         self.num_of_titles_side = num_of_tiles_side
-        self.drawer = Hexagon2DDrawer(num_of_tiles_side, agents, walls)
+        self.drawer = Hexagon2DDrawer(num_of_tiles_side, agents, walls, path_to_results, create_step_images)
 
     def agent_reset(self) -> None:
         """Reset clustering settings for all agents."""

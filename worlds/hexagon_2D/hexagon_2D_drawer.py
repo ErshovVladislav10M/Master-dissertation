@@ -8,7 +8,9 @@ from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 
 
 class Hexagon2DDrawer:
-    def __init__(self, num_of_titles_side: int, agents: list, walls: list):
+    def __init__(self, num_of_titles_side: int, agents: list, walls: list, path_to_results: str, create_step_images: bool):
+        self.path_to_results = path_to_results
+        self.create_step_images = create_step_images
         self.num_of_titles_side = num_of_titles_side
         self.agents = agents
         self.walls = walls
@@ -98,14 +100,14 @@ class Hexagon2DDrawer:
         plt.legend(loc="best")"""
 
         if step == num_steps - 1:
-            f = open("accuracy.txt", "w")
+            f = open(self.path_to_results + "/accuracy.txt", "w")
             f.write(str(self.accuracy))
             f.close()
-            f = open("diameter.txt", "w")
+            f = open(self.path_to_results + "/diameter.txt", "w")
             f.write(str(self.diameter))
             f.close()
 
-        plt.savefig(f"./result/img/img_{step}.png", transparent=False, facecolor="white", dpi=300)
+        plt.savefig(self.path_to_results + f"/img/img_{step}.png", transparent=False, facecolor="white", dpi=300)
         plt.close()
         self.draw_center_cluster_label.clear()
         self.draw_center_cluster_location.clear()
