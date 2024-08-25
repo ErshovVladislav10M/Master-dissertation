@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -246,115 +247,67 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def reload_options(self):
-        try:
-            with open(simulation_world_file, "r") as file:
-                for line in file.readlines():
-                    if line.__contains__("num_of_tiles:"):
-                        self.size_world_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-                    elif line.__contains__("num_of_steps:"):
-                        self.number_of_steps_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-                    elif line.__contains__("agent_locations:"):
-                        self.agent_locations_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-                    elif line.__contains__("target_location:"):
-                        self.target_location_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-                    elif line.__contains__("type_of_strategy:"):
-                        self.types_of_strategies_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-                    elif line.__contains__("wall_locations:"):
-                        self.wall_locations_line_edit.setText(
-                            line.split(":")[1].replace("\n", "")
-                        )
-        except Exception:
-            print(Exception)
+        with open(simulation_world_file, "r", encoding="utf-8") as file:
+            configuration_data = json.load(file)
+
+        self.size_world_line_edit.setText(str(configuration_data["num_of_tiles"]))
+        self.number_of_steps_line_edit.setText(str(configuration_data["num_of_steps"]))
+        self.target_location_line_edit.setText(str(configuration_data["target_location"]))
+        self.types_of_strategies_line_edit.setText(str(configuration_data["type_of_strategy"]))
+        self.wall_locations_line_edit.setText(str(configuration_data["wall_locations"]))
+        self.agent_locations_line_edit.setText(str(configuration_data["agent_locations"]))
 
     def save_options(self):
-        try:
-            with open(simulation_world_file, "w") as file:
-                file.write("num_of_tiles:" + self.size_world_line_edit.text() + "\n")
-                file.write(
-                    "num_of_steps:" + self.number_of_steps_line_edit.text() + "\n"
-                )
-                file.write(
-                    "agent_locations:" + self.agent_locations_line_edit.text() + "\n"
-                )
-                file.write(
-                    "target_location:" + self.target_location_line_edit.text() + "\n"
-                )
-                file.write(
-                    "type_of_strategy:"
-                    + self.types_of_strategies_line_edit.text()
-                    + "\n"
-                )
-                file.write(
-                    "wall_locations:" + self.wall_locations_line_edit.text() + "\n"
-                )
-        except Exception:
-            print(Exception)
+        new_data = {
+            "num_of_tiles": int(self.size_world_line_edit.text()),
+            "num_of_steps": int(self.number_of_steps_line_edit.text()),
+            "agent_locations": list(self.agent_locations_line_edit.text()),
+            "target_location": list(self.target_location_line_edit.text()),
+            "type_of_strategy": self.types_of_strategies_line_edit.text(),
+            "wall_locations": list(self.wall_locations_line_edit.text())
+        }
+        with open(simulation_world_file, "w") as file:
+            json.dump(new_data, file, separators=(",", ": "), indent=2)
 
     def start_simulation(self):
-        try:
-            agent_locations = []
+        with open(simulation_world_file, "r", encoding="utf-8") as file:
+            configuration_data = json.load(file)
 
-            with open(simulation_world_file, "r") as file:
-                for line in file.readlines():
-                    if line.__contains__("num_of_tiles:"):
-                        global num_of_tiles_side
-                        num_of_tiles_side = int(line.split(":")[1])
-                    elif line.__contains__("num_of_steps:"):
-                        global num_of_steps
-                        num_of_steps = int(line.split(":")[1])
-                    elif line.__contains__("agent_locations:"):
-                        for agent in line.split(":")[1].split(";"):
-                            agent = agent.replace("(", "")
-                            agent = agent.replace(")", "")
-                            row, column = agent.split(",")
-                            agent_locations.append(
-                                Hexagon2DLocation(int(row), int(column))
-                            )
-                    elif line.__contains__("target_location:"):
-                        target_location = line.split(":")[1]
-                        target_location = target_location.replace("(", "")
-                        target_location = target_location.replace(")", "")
-                        row, column = target_location.split(",")
-                        global target
-                        target = Hexagon2DLocation(int(row), int(column))
-                    elif line.__contains__("type_of_strategy:"):
-                        global agent_strategy
-                        agent_strategy = line.split(":")[1]
-                    elif line.__contains__("wall_locations:"):
-                        global walls
-                        for wall in line.split(":")[1].split(";"):
-                            wall = wall.replace("(", "")
-                            wall = wall.replace(")", "")
-                            row, column = wall.split(",")
-                            walls.append(Hexagon2DLocation(int(row), int(column)))
+        global num_of_tiles_side
+        num_of_tiles_side = configuration_data["num_of_tiles"]
 
-            self.create_agents(agent_locations)
+        global num_of_steps
+        num_of_steps = configuration_data["num_of_steps"]
 
-            global simulation_world
-            simulation_world = Hexagon2DWorld(
-                num_of_tiles_side=num_of_tiles_side,
-                agents=agents,
-                num_steps=num_of_steps,
-                walls=walls,
-                path_to_results="result",
-                create_step_images=True
-            )
-            simulation_world.start()
+        global target
+        target_location = configuration_data["target_location"]
+        target = Hexagon2DLocation(target_location[0], target_location[1])
 
-            show_window.show()
-            main_window.hide()
-        except Exception:
-            print(Exception)
+        global agent_strategy
+        agent_strategy = configuration_data["type_of_strategy"]
+
+        global walls
+        for location in configuration_data["wall_locations"]:
+            walls.append(Hexagon2DLocation(location[0], location[1]))
+
+        agent_locations = []
+        for location in configuration_data["agent_locations"]:
+            agent_locations.append(Hexagon2DLocation(location[0], location[0]))
+        self.create_agents(agent_locations)
+
+        global simulation_world
+        simulation_world = Hexagon2DWorld(
+            num_of_tiles_side=num_of_tiles_side,
+            agents=agents,
+            num_steps=num_of_steps,
+            walls=walls,
+            path_to_results="result",
+            create_step_images=True
+        )
+        simulation_world.start()
+
+        show_window.show()
+        main_window.hide()
 
     @staticmethod
     def create_agents(agent_locations: []) -> None:
