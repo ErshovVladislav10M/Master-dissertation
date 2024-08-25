@@ -1,6 +1,6 @@
 from random import random
 
-from worlds.abstract_location import AbstractLocation
+from src.worlds.abstract_location import AbstractLocation
 
 
 class Hexagon2DLocation(AbstractLocation):

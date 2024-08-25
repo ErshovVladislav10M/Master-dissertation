@@ -1,5 +1,5 @@
-from behaviours.abstract_hexagon_behaviour import AbstractHexagonBehaviour
-from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
+from src.behaviours.abstract_hexagon_behaviour import AbstractHexagonBehaviour
+from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 
 
 class Behaviour3(AbstractHexagonBehaviour):

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from behaviours.abstract_behaviour import AbstractBehaviour
+from src.behaviours.abstract_behaviour import AbstractBehaviour
 
 
 class AbstractAgent(ABC):

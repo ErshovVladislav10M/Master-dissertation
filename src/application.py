@@ -14,12 +14,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
 )
 
-from agents.simple_agent import SimpleAgent
-from behaviours.behaviour_macro import MacroBehaviour
-from behaviours.behaviour_meso import MesoBehaviour
-from behaviours.behaviour_micro import MicroBehaviour
-from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
-from worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
+from src.agents.simple_agent import SimpleAgent
+from src.behaviours.behaviour_macro import MacroBehaviour
+from src.behaviours.behaviour_meso import MesoBehaviour
+from src.behaviours.behaviour_micro import MicroBehaviour
+from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
+from src.worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
 simulation_world_file: str
 simulation_world: Hexagon2DWorld

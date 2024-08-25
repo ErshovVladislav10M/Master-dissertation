@@ -4,7 +4,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon, Circle
 
-from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
+from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 
 import matplotlib
 matplotlib.use('Agg')

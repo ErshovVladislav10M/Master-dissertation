@@ -1,6 +1,6 @@
 from random import random
 
-from behaviours.abstract_hexagon_behaviour import AbstractHexagonBehaviour
+from src.behaviours.abstract_hexagon_behaviour import AbstractHexagonBehaviour
 
 
 class MicroBehaviour(AbstractHexagonBehaviour):

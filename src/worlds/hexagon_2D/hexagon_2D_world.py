@@ -1,5 +1,5 @@
-from worlds.abstract_world import AbstractWorld
-from worlds.hexagon_2D.hexagon_2D_drawer import Hexagon2DDrawer
+from src.worlds.abstract_world import AbstractWorld
+from src.worlds.hexagon_2D.hexagon_2D_drawer import Hexagon2DDrawer
 
 
 class Hexagon2DWorld(AbstractWorld):
