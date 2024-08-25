@@ -1,6 +1,7 @@
 import argparse
 import sys
 import imageio
+
 from matplotlib import pyplot as plt
 
 from agents.simple_agent import SimpleAgent
@@ -9,6 +10,9 @@ from behaviours.behaviour_meso import MesoBehaviour
 from behaviours.behaviour_micro import MicroBehaviour
 from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 from worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
+
+import matplotlib
+matplotlib.use("Agg")
 
 num_of_tiles_side: int
 num_of_steps: int
@@ -21,7 +25,7 @@ walls = []
 def create_parser() -> argparse.ArgumentParser:
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument("--configuration_file", nargs="?", default="./configurations/test_configuration")
-    argument_parser.add_argument("--path_to_results", nargs="?", default="./results")
+    argument_parser.add_argument("--path_to_results", nargs="?", default="./result")
     argument_parser.add_argument("--create_result_graph", nargs="?", default="True")
     argument_parser.add_argument("--create_step_images", nargs="?", default="True")
     argument_parser.add_argument("--create_gif", nargs="?", default="True")

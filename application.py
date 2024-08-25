@@ -346,6 +346,8 @@ class MainWindow(QMainWindow):
                 agents=agents,
                 num_steps=num_of_steps,
                 walls=walls,
+                path_to_results="result",
+                create_step_images=True
             )
             simulation_world.start()
 

@@ -6,9 +6,14 @@ from matplotlib.patches import RegularPolygon, Circle
 
 from worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 
+import matplotlib
+matplotlib.use('Agg')
+
 
 class Hexagon2DDrawer:
-    def __init__(self, num_of_titles_side: int, agents: list, walls: list, path_to_results: str, create_step_images: bool):
+    def __init__(
+        self, num_of_titles_side: int, agents: list, walls: list, path_to_results: str, create_step_images: bool
+    ):
         self.path_to_results = path_to_results
         self.create_step_images = create_step_images
         self.num_of_titles_side = num_of_titles_side

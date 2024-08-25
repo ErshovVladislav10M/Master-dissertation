@@ -16,7 +16,7 @@ class Hexagon2DWorld(AbstractWorld):
         :type num_steps: int
         :param walls: walls on world
         :type walls: list
-        :param path_to_results: relative path to the folder with the results
+        :param path_to_results: relative path to the folder with the result
         :type path_to_results: str
         :param create_step_images: whether to create pictures
         :type create_step_images: bool
