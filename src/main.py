@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 import imageio
 
@@ -24,7 +25,7 @@ walls = []
 
 def create_parser() -> argparse.ArgumentParser:
     argument_parser = argparse.ArgumentParser()
-    argument_parser.add_argument("--configuration_file", nargs="?", default="./configurations/test_configuration")
+    argument_parser.add_argument("--configuration_file", nargs="?", default="./configurations/test_configuration.json")
     argument_parser.add_argument("--path_to_results", nargs="?", default="./result")
     argument_parser.add_argument("--create_result_graph", nargs="?", default="True")
     argument_parser.add_argument("--create_step_images", nargs="?", default="True")
@@ -34,52 +35,33 @@ def create_parser() -> argparse.ArgumentParser:
     return argument_parser
 
 
-def parse_configuration(configuration_file) -> None:
-    try:
-        agent_locations = []
+def parse_configuration(configuration_data) -> None:
+    global num_of_tiles_side
+    num_of_tiles_side = configuration_data["num_of_tiles"]
 
-        with open(configuration_file, "r") as file:
-            for line in file.readlines():
-                if line.__contains__("num_of_tiles:"):
-                    global num_of_tiles_side
-                    num_of_tiles_side = int(line.split(":")[1])
-                elif line.__contains__("num_of_steps:"):
-                    global num_of_steps
-                    num_of_steps = int(line.split(":")[1])
-                elif line.__contains__("agent_locations:"):
-                    for agent in line.split(":")[1].split(";"):
-                        agent = agent.replace("(", "")
-                        agent = agent.replace(")", "")
-                        row, column = agent.split(",")
-                        agent_locations.append(
-                            Hexagon2DLocation(int(row), int(column))
-                        )
-                elif line.__contains__("target_location:"):
-                    target_location = line.split(":")[1]
-                    target_location = target_location.replace("(", "")
-                    target_location = target_location.replace(")", "")
-                    row, column = target_location.split(",")
-                    global target
-                    target = Hexagon2DLocation(int(row), int(column))
-                elif line.__contains__("type_of_strategy:"):
-                    global agent_strategy
-                    agent_strategy = line.split(":")[1]
-                elif line.__contains__("wall_locations:"):
-                    global walls
-                    for wall in line.split(":")[1].split(";"):
-                        wall = wall.replace("(", "")
-                        wall = wall.replace(")", "")
-                        row, column = wall.split(",")
-                        walls.append(Hexagon2DLocation(int(row), int(column)))
+    global num_of_steps
+    num_of_steps = configuration_data["num_of_steps"]
 
-        create_agents(agent_locations)
-    except Exception:
-        print(Exception)
+    global target
+    target_location = configuration_data["target_location"]
+    target = Hexagon2DLocation(target_location[0], target_location[1])
+
+    global agent_strategy
+    agent_strategy = configuration_data["type_of_strategy"]
+
+    global walls
+    for location in configuration_data["wall_locations"]:
+        walls.append(Hexagon2DLocation(location[0], location[1]))
+
+    agent_locations = []
+    for location in configuration_data["agent_locations"]:
+        agent_locations.append(Hexagon2DLocation(location[0], location[0]))
+    create_agents(agent_locations)
 
 
 def create_agents(agent_locations: []) -> None:
     global agents, target, agent_strategy
-    if agent_strategy == "Micro\n":
+    if agent_strategy == "Micro":
         for index, agent_location in zip(
                 range(len(agent_locations)), agent_locations
         ):
@@ -92,7 +74,7 @@ def create_agents(agent_locations: []) -> None:
             agents.append(
                 SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
             )
-    elif agent_strategy == "Macro\n":
+    elif agent_strategy == "Macro":
         for index, agent_location in zip(
                 range(len(agent_locations)), agent_locations
         ):
@@ -106,7 +88,7 @@ def create_agents(agent_locations: []) -> None:
             agents.append(
                 SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
             )
-    elif agent_strategy == "Meso\n":
+    elif agent_strategy == "Meso":
         for index, agent_location in zip(
                 range(len(agent_locations)), agent_locations
         ):
@@ -167,7 +149,9 @@ if __name__ == "__main__":
 
     print(args)
 
-    parse_configuration(args.configuration_file)
+    with open(args.configuration_file, "r", encoding="utf-8") as file:
+        configuration_data = json.load(file)
+    parse_configuration(configuration_data)
 
     simulation_world = Hexagon2DWorld(
         num_of_tiles_side=num_of_tiles_side,
