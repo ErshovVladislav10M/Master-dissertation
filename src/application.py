@@ -258,16 +258,15 @@ class MainWindow(QMainWindow):
         self.agent_locations_line_edit.setText(str(configuration_data["agent_locations"]))
 
     def save_options(self):
-        new_data = {
-            "num_of_tiles": int(self.size_world_line_edit.text()),
-            "num_of_steps": int(self.number_of_steps_line_edit.text()),
-            "agent_locations": list(self.agent_locations_line_edit.text()),
-            "target_location": list(self.target_location_line_edit.text()),
-            "type_of_strategy": self.types_of_strategies_line_edit.text(),
-            "wall_locations": list(self.wall_locations_line_edit.text())
-        }
+        new_data = f'"num_of_tiles": {self.size_world_line_edit.text()},\
+            "num_of_steps": {self.number_of_steps_line_edit.text()},\
+            "agent_locations": {self.agent_locations_line_edit.text()},\
+            "target_location": {self.target_location_line_edit.text()},\
+            "type_of_strategy": "{self.types_of_strategies_line_edit.text()}",\
+            "wall_locations": {self.wall_locations_line_edit.text()}'
         with open(simulation_world_file, "w") as file:
-            json.dump(new_data, file, separators=(",", ": "), indent=2)
+            json_data = json.loads("{" + new_data + "}")
+            json.dump(json_data, file, indent=2)
 
     def start_simulation(self):
         with open(simulation_world_file, "r", encoding="utf-8") as file:
