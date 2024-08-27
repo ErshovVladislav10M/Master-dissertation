@@ -5,7 +5,6 @@ import imageio
 
 from matplotlib import pyplot as plt
 
-from src.agents.abstract_agent import AbstractAgent
 from src.agents.simple_agent import SimpleAgent
 from src.behaviours.behaviour_macro import MacroBehaviour
 from src.behaviours.behaviour_meso import MesoBehaviour
@@ -34,7 +33,7 @@ def create_agents(
     target_location: Hexagon2DLocation,
     walls: list[Hexagon2DLocation],
     strategy: str
-) -> list[AbstractAgent]:
+) -> list[SimpleAgent]:
     agents = []
     if strategy == "Micro":
         for index, agent_location in zip(

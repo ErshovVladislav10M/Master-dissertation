@@ -23,12 +23,6 @@ from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 from src.worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
 simulation_world_file: str
-num_of_tiles_side: int
-num_of_steps: int
-agents = []
-target_location: Hexagon2DLocation
-strategy: str
-walls = []
 
 start_window: QMainWindow
 create_simulation_window: QMainWindow
@@ -133,9 +127,7 @@ class LoadSimulationWindow(QMainWindow):
 
         self.line_edit = QLineEdit()
         self.line_edit.setFixedSize(250, 40)
-        self.line_edit.setPlaceholderText(
-            "Enter the full path to the simulation world file"
-        )
+        self.line_edit.setPlaceholderText("Enter the full path to the configuration file")
 
         create_button = QPushButton("Load simulation")
         create_button.setFixedSize(250, 40)
@@ -205,7 +197,7 @@ class MainWindow(QMainWindow):
         self.types_of_strategies_line_edit = QLineEdit()
         self.types_of_strategies_line_edit.setFixedSize(250, 40)
         self.types_of_strategies_line_edit.setPlaceholderText(
-            "Enter a strategy for agents (like: 'Micro', 'Macro', " "'Meso')"
+            "Enter a strategy for agents (like: 'Micro', 'Macro', 'Meso')"
         )
 
         self.wall_locations_line_edit = QLineEdit()
@@ -271,19 +263,10 @@ class MainWindow(QMainWindow):
         with open(simulation_world_file, "r", encoding="utf-8") as file:
             configuration_data = json.load(file)
 
-        global num_of_tiles_side
         num_of_tiles_side = configuration_data["num_of_tiles"]
-
-        global num_of_steps
         num_of_steps = configuration_data["num_of_steps"]
-
-        global target_location
         target_location = Hexagon2DLocation.of(configuration_data["target_location"])
-
-        global strategy
         strategy = configuration_data["type_of_strategy"]
-
-        global walls
         walls = [
             Hexagon2DLocation.of(location)
             for location in configuration_data["wall_locations"]
@@ -293,7 +276,12 @@ class MainWindow(QMainWindow):
             Hexagon2DLocation.of(location)
             for location in configuration_data["agent_locations"]
         ]
-        self.create_agents(agent_locations)
+        agents = self.create_agents(
+            agent_locations=agent_locations,
+            target_location=target_location,
+            walls=walls,
+            strategy=strategy
+        )
 
         simulation_world = Hexagon2DWorld(
             num_of_tiles_side=num_of_tiles_side,
@@ -309,8 +297,13 @@ class MainWindow(QMainWindow):
         main_window.hide()
 
     @staticmethod
-    def create_agents(agent_locations: []) -> None:
-        global agents, target_location, strategy
+    def create_agents(
+        agent_locations: list[Hexagon2DLocation],
+        target_location: Hexagon2DLocation,
+        walls: list[Hexagon2DLocation],
+        strategy: str
+    ) -> list[SimpleAgent]:
+        agents = []
         if strategy == "Micro":
             for index, agent_location in zip(
                 range(len(agent_locations)),
@@ -352,6 +345,8 @@ class MainWindow(QMainWindow):
                 )
                 agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
                 agents.append(agent)
+
+        return agents
 
 
 class ShowWindow(QMainWindow):
