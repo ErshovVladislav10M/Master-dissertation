@@ -70,7 +70,7 @@ def create_agents(
             behaviour = MesoBehaviour(
                 agent_id=index,
                 agent_location=agent_location,
-                cluster_radius=5,
+                cluster_radius=8,
                 target_location=target_location,
                 walls=walls,
             )

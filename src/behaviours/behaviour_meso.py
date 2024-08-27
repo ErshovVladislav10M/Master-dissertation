@@ -63,31 +63,31 @@ class MesoBehaviour(AbstractHexagonBehaviour):
                 self.target_location - self.center_cluster_location + self.agent_location
             )
 
-    """def correct_next_move(self) -> None:
-        # Поправка только от ближайшего обходящего препятствие
-        agent_behaviours = [
-            message[0]
-            for _, message in self.messages.items()
-            if message[0].cluster_id == self.cluster_id and message[0].agent_id != self.agent_id
-        ]
-
-        if self.coefficient_trust == 0 or len(agent_behaviours) == 0:
-            return
-
-        nearest_agent_behaviour = agent_behaviours[0]
-        for agent_behaviour in agent_behaviours:
-            if (
-                self.agent_location.get_distance(agent_behaviour.agent_location)
-                < self.agent_location.get_distance(nearest_agent_behaviour.agent_location)
-                and agent_behaviour.coefficient_confidence == 1
-            ):
-                nearest_agent_behaviour = agent_behaviour
-
-        if nearest_agent_behaviour.coefficient_confidence == 1:
-            self.next_move = nearest_agent_behaviour.next_move
-
-        if self.walls.count(self.agent_location + self.next_move) > 0:
-            self.obstacle_avoidance()"""
+    # def correct_next_move(self) -> None:
+    #     # Поправка только от ближайшего обходящего препятствие
+    #     agent_behaviours = [
+    #         message[0]
+    #         for _, message in self.messages.items()
+    #         if message[0].cluster_id == self.cluster_id and message[0].agent_id != self.agent_id
+    #     ]
+    #
+    #     if self.coefficient_trust == 0 or len(agent_behaviours) == 0:
+    #         return
+    #
+    #     nearest_agent_behaviour = agent_behaviours[0]
+    #     for agent_behaviour in agent_behaviours:
+    #         if (
+    #             self.agent_location.get_distance(agent_behaviour.agent_location)
+    #             < self.agent_location.get_distance(nearest_agent_behaviour.agent_location)
+    #             and agent_behaviour.coefficient_confidence == 1
+    #         ):
+    #             nearest_agent_behaviour = agent_behaviour
+    #
+    #     if nearest_agent_behaviour.coefficient_confidence == 1:
+    #         self.next_move = nearest_agent_behaviour.next_move
+    #
+    #     if self.walls.count(self.agent_location + self.next_move) > 0:
+    #         self.obstacle_avoidance()
 
     def correct_next_move(self) -> None:
         # Берем от всех, но обратно пропорционально расстоянию между агентами
@@ -109,7 +109,7 @@ class MesoBehaviour(AbstractHexagonBehaviour):
                     agent_behaviour.agent_location + agent_behaviour.next_move
                 )
             )
-            
+
             group_next_move_in_degrees += (
                 (agent_next_move_in_degrees - agent_direction_in_degrees)
                 * agent_behaviour.coefficient_confidence
@@ -130,99 +130,99 @@ class MesoBehaviour(AbstractHexagonBehaviour):
         if self.walls.count(self.agent_location + self.next_move) > 0:
             self.obstacle_avoidance()
 
-    """def define_clusters(self, messages: dict) -> None:
-        # Жадный
-        if len([message[0].cluster_id for _, message in messages.items()]) == 0:
-            max_cluster_id = 0
-        else:
-            max_cluster_id = max([message[0].cluster_id for _, message in messages.items()])
-        self.cluster_id = max_cluster_id + 1
-        self.is_cluster_definition = True
+    # def define_clusters(self, messages: dict) -> None:
+    #     # Жадный
+    #     if len([message[0].cluster_id for _, message in messages.items()]) == 0:
+    #         max_cluster_id = 0
+    #     else:
+    #         max_cluster_id = max([message[0].cluster_id for _, message in messages.items()])
+    #     self.cluster_id = max_cluster_id + 1
+    #     self.is_cluster_definition = True
+    #
+    #     agent_behaviours = [message[0] for _, message in messages.items()]
+    #     cluster_member_locations = [self.agent_location]
+    #     center_cluster_location = self.agent_location
+    #
+    #     for agent_behaviour in agent_behaviours:
+    #         if not agent_behaviour.is_cluster_definition and self.is_agent_in_cluster_radius(
+    #             agent_behaviour.agent_location, cluster_member_locations
+    #         ):
+    #             agent_behaviour.cluster_id = self.cluster_id
+    #             agent_behaviour.is_cluster_definition = True
+    #             cluster_member_locations.append(agent_behaviour.agent_location)
+    #             center_cluster_location += agent_behaviour.agent_location
+    #
+    #     center_cluster_location //= len(cluster_member_locations)
+    #     self.center_cluster_location = center_cluster_location
+    #
+    #     for agent_behaviour in agent_behaviours:
+    #         if agent_behaviour.cluster_id == self.cluster_id:
+    #             agent_behaviour.center_cluster_location = self.center_cluster_location
 
-        agent_behaviours = [message[0] for _, message in messages.items()]
-        cluster_member_locations = [self.agent_location]
-        center_cluster_location = self.agent_location
-
-        for agent_behaviour in agent_behaviours:
-            if not agent_behaviour.is_cluster_definition and self.is_agent_in_cluster_radius(
-                agent_behaviour.agent_location, cluster_member_locations
-            ):
-                agent_behaviour.cluster_id = self.cluster_id
-                agent_behaviour.is_cluster_definition = True
-                cluster_member_locations.append(agent_behaviour.agent_location)
-                center_cluster_location += agent_behaviour.agent_location
-
-        center_cluster_location //= len(cluster_member_locations)
-        self.center_cluster_location = center_cluster_location
-
-        for agent_behaviour in agent_behaviours:
-            if agent_behaviour.cluster_id == self.cluster_id:
-                agent_behaviour.center_cluster_location = self.center_cluster_location"""
+    # def define_clusters(self, messages: dict) -> None:
+    #     # Остовное дерево
+    #     agent_behaviours = [message[0] for _, message in messages.items()]
+    #
+    #     pairs_agent_behaviours = []
+    #     for agent_behaviour_i in agent_behaviours:
+    #         for agent_behaviour_j in agent_behaviours:
+    #             pair_agents_distance = agent_behaviour_i.agent_location.get_distance(agent_behaviour_j.agent_location)
+    #             if pair_agents_distance < self.cluster_radius and agent_behaviour_j != agent_behaviour_i:
+    #                 pairs_agent_behaviours.append((agent_behaviour_i, agent_behaviour_j))
+    #
+    #     pairs_agent_behaviours.sort(key=lambda pair: pair[0].agent_location.get_distance(pair[1].agent_location))
+    #
+    #     spanning_tree = []
+    #     clusters = {}
+    #     cluster_id = 1
+    #     # num_of_clusters = 2
+    #     for pair in pairs_agent_behaviours:
+    #         # if len(spanning_tree) > len(agent_behaviours) - 1 - num_of_clusters:
+    #         #    break
+    #         if not pair[0].is_cluster_definition and not pair[1].is_cluster_definition:
+    #             pair[0].cluster_id = cluster_id
+    #             pair[0].is_cluster_definition = True
+    #             pair[1].cluster_id = cluster_id
+    #             pair[1].is_cluster_definition = True
+    #             clusters.update([(cluster_id, [pair[0], pair[1]])])
+    #             spanning_tree.append(pair)
+    #             cluster_id += 1
+    #         elif not pair[0].is_cluster_definition and pair[1].is_cluster_definition:
+    #             pair[0].cluster_id = pair[1].cluster_id
+    #             pair[0].is_cluster_definition = True
+    #             clusters.get(pair[1].cluster_id).append(pair[0])
+    #             spanning_tree.append(pair)
+    #         elif pair[0].is_cluster_definition and not pair[1].is_cluster_definition:
+    #             pair[1].cluster_id = pair[0].cluster_id
+    #             pair[1].is_cluster_definition = True
+    #             clusters.get(pair[0].cluster_id).append(pair[1])
+    #             spanning_tree.append(pair)
+    #         elif pair[1].cluster_id != pair[0].cluster_id:
+    #             ind = pair[1].cluster_id
+    #             for behaviour in clusters.get(ind):
+    #                 behaviour.cluster_id = pair[0].cluster_id
+    #                 clusters.get(pair[0].cluster_id).append(behaviour)
+    #             clusters.pop(ind)
+    #             spanning_tree.append(pair)
+    #
+    #     new_cluster_id = 1
+    #     for _, cluster in clusters.items():
+    #         center_cluster_location = Hexagon2DLocation(0, 0)
+    #         for behaviour in cluster:
+    #             center_cluster_location += behaviour.agent_location
+    #         center_cluster_location //= len(cluster)
+    #         for behaviour in cluster:
+    #             behaviour.center_cluster_location = center_cluster_location
+    #             behaviour.cluster_id = new_cluster_id
+    #         new_cluster_id += 1
+    #
+    #     for behaviour in agent_behaviours:
+    #         if behaviour.cluster_id == 0:
+    #             behaviour.cluster_id = new_cluster_id
+    #             new_cluster_id += 1
+    #             behaviour.is_cluster_definition = True
 
     def define_clusters(self, messages: dict) -> None:
-        # Остовное дерево
-        agent_behaviours = [message[0] for _, message in messages.items()]
-
-        pairs_agent_behaviours = []
-        for agent_behaviour_i in agent_behaviours:
-            for agent_behaviour_j in agent_behaviours:
-                pair_agents_distance = agent_behaviour_i.agent_location.get_distance(agent_behaviour_j.agent_location)
-                if pair_agents_distance < self.cluster_radius and agent_behaviour_j != agent_behaviour_i:
-                    pairs_agent_behaviours.append((agent_behaviour_i, agent_behaviour_j))
-
-        pairs_agent_behaviours.sort(key=lambda pair: pair[0].agent_location.get_distance(pair[1].agent_location))
-
-        spanning_tree = []
-        clusters = {}
-        cluster_id = 1
-        # num_of_clusters = 2
-        for pair in pairs_agent_behaviours:
-            # if len(spanning_tree) > len(agent_behaviours) - 1 - num_of_clusters:
-            #    break
-            if not pair[0].is_cluster_definition and not pair[1].is_cluster_definition:
-                pair[0].cluster_id = cluster_id
-                pair[0].is_cluster_definition = True
-                pair[1].cluster_id = cluster_id
-                pair[1].is_cluster_definition = True
-                clusters.update([(cluster_id, [pair[0], pair[1]])])
-                spanning_tree.append(pair)
-                cluster_id += 1
-            elif not pair[0].is_cluster_definition and pair[1].is_cluster_definition:
-                pair[0].cluster_id = pair[1].cluster_id
-                pair[0].is_cluster_definition = True
-                clusters.get(pair[1].cluster_id).append(pair[0])
-                spanning_tree.append(pair)
-            elif pair[0].is_cluster_definition and not pair[1].is_cluster_definition:
-                pair[1].cluster_id = pair[0].cluster_id
-                pair[1].is_cluster_definition = True
-                clusters.get(pair[0].cluster_id).append(pair[1])
-                spanning_tree.append(pair)
-            elif pair[1].cluster_id != pair[0].cluster_id:
-                ind = pair[1].cluster_id
-                for behaviour in clusters.get(ind):
-                    behaviour.cluster_id = pair[0].cluster_id
-                    clusters.get(pair[0].cluster_id).append(behaviour)
-                clusters.pop(ind)
-                spanning_tree.append(pair)
-
-        new_cluster_id = 1
-        for _, cluster in clusters.items():
-            center_cluster_location = Hexagon2DLocation(0, 0)
-            for behaviour in cluster:
-                center_cluster_location += behaviour.agent_location
-            center_cluster_location //= len(cluster)
-            for behaviour in cluster:
-                behaviour.center_cluster_location = center_cluster_location
-                behaviour.cluster_id = new_cluster_id
-            new_cluster_id += 1
-
-        for behaviour in agent_behaviours:
-            if behaviour.cluster_id == 0:
-                behaviour.cluster_id = new_cluster_id
-                new_cluster_id += 1
-                behaviour.is_cluster_definition = True
-
-    """def define_clusters(self, messages: dict) -> None:
         # Снизу вверх жадный
         agent_behaviours = [message[0] for _, message in messages.items()]
         agent_behaviours.sort(key=lambda behaviour: behaviour.agent_location.row)
@@ -254,7 +254,7 @@ class MesoBehaviour(AbstractHexagonBehaviour):
                 center_cluster_location += behaviour.agent_location
             center_cluster_location //= len(cluster)
             for behaviour in cluster:
-                behaviour.center_cluster_location = center_cluster_location"""
+                behaviour.center_cluster_location = center_cluster_location
 
     def do_action(self) -> None:
         self.coefficient_trust = 1
