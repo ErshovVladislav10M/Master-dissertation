@@ -1,6 +1,13 @@
 # Master-dissertation
 The work is devoted to clustering in multi-agent systems
 
+### Install dependencies
+- Use python 3.11
+- From root:
+```
+pip install -r ./requirements.txt
+```
+
 ### How to use with application
 - From root:
 ```

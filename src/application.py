@@ -313,7 +313,8 @@ class MainWindow(QMainWindow):
         global agents, target, agent_strategy
         if agent_strategy == "Micro":
             for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+                range(len(agent_locations)),
+                agent_locations
             ):
                 behaviour = MicroBehaviour(
                     agent_id=index,
@@ -321,26 +322,26 @@ class MainWindow(QMainWindow):
                     target_location=target,
                     walls=walls,
                 )
-                agents.append(
-                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-                )
+                agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                agents.append(agent)
         elif agent_strategy == "Macro":
             for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+                range(len(agent_locations)),
+                agent_locations
             ):
                 behaviour = MacroBehaviour(
                     agent_id=index,
                     cluster_id=0,
                     agent_location=agent_location,
                     target_location=target,
-                    walls=[],
+                    walls=walls,
                 )
-                agents.append(
-                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-                )
+                agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                agents.append(agent)
         else:
             for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+                range(len(agent_locations)),
+                agent_locations
             ):
                 behaviour = MesoBehaviour(
                     agent_id=index,
@@ -349,9 +350,8 @@ class MainWindow(QMainWindow):
                     target_location=target,
                     walls=walls,
                 )
-                agents.append(
-                    SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-                )
+                agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+                agents.append(agent)
 
 
 class ShowWindow(QMainWindow):

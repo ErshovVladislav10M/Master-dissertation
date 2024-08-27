@@ -106,7 +106,7 @@ def create_agents(agent_locations: []) -> None:
         raise ValueError("Incorrect agent strategy")
 
 
-def create_gif(path_to_results: str, gif_duration: str) -> None:
+def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> None:
     images = []
     for index in range(num_of_steps):
         images.append(imageio.v2.imread(path_to_results + f"/img/img_{index}.png"))
@@ -167,7 +167,11 @@ if __name__ == "__main__":
 
     if bool(args.create_gif):
         if bool(args.create_step_images):
-            create_gif(path_to_results=args.path_to_results, gif_duration=args.gif_duration)
+            create_gif(
+                path_to_results=args.path_to_results,
+                gif_duration=args.gif_duration,
+                num_of_steps=num_of_steps
+            )
         else:
             print("Can't create gif: not created step images")
 
