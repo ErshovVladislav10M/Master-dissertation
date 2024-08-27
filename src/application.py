@@ -23,12 +23,11 @@ from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 from src.worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
 simulation_world_file: str
-simulation_world: Hexagon2DWorld
 num_of_tiles_side: int
 num_of_steps: int
 agents = []
-target: Hexagon2DLocation
-agent_strategy: str
+target_location: Hexagon2DLocation
+strategy: str
 walls = []
 
 start_window: QMainWindow
@@ -278,23 +277,24 @@ class MainWindow(QMainWindow):
         global num_of_steps
         num_of_steps = configuration_data["num_of_steps"]
 
-        global target
-        target_location = configuration_data["target_location"]
-        target = Hexagon2DLocation(target_location[0], target_location[1])
+        global target_location
+        target_location = Hexagon2DLocation.of(configuration_data["target_location"])
 
-        global agent_strategy
-        agent_strategy = configuration_data["type_of_strategy"]
+        global strategy
+        strategy = configuration_data["type_of_strategy"]
 
         global walls
-        for location in configuration_data["wall_locations"]:
-            walls.append(Hexagon2DLocation(location[0], location[1]))
+        walls = [
+            Hexagon2DLocation.of(location)
+            for location in configuration_data["wall_locations"]
+        ]
 
-        agent_locations = []
-        for location in configuration_data["agent_locations"]:
-            agent_locations.append(Hexagon2DLocation(location[0], location[0]))
+        agent_locations = [
+            Hexagon2DLocation.of(location)
+            for location in configuration_data["agent_locations"]
+        ]
         self.create_agents(agent_locations)
 
-        global simulation_world
         simulation_world = Hexagon2DWorld(
             num_of_tiles_side=num_of_tiles_side,
             agents=agents,
@@ -310,8 +310,8 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def create_agents(agent_locations: []) -> None:
-        global agents, target, agent_strategy
-        if agent_strategy == "Micro":
+        global agents, target_location, strategy
+        if strategy == "Micro":
             for index, agent_location in zip(
                 range(len(agent_locations)),
                 agent_locations
@@ -319,12 +319,12 @@ class MainWindow(QMainWindow):
                 behaviour = MicroBehaviour(
                     agent_id=index,
                     agent_location=agent_location,
-                    target_location=target,
+                    target_location=target_location,
                     walls=walls,
                 )
                 agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
                 agents.append(agent)
-        elif agent_strategy == "Macro":
+        elif strategy == "Macro":
             for index, agent_location in zip(
                 range(len(agent_locations)),
                 agent_locations
@@ -333,7 +333,7 @@ class MainWindow(QMainWindow):
                     agent_id=index,
                     cluster_id=0,
                     agent_location=agent_location,
-                    target_location=target,
+                    target_location=target_location,
                     walls=walls,
                 )
                 agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
@@ -347,7 +347,7 @@ class MainWindow(QMainWindow):
                     agent_id=index,
                     agent_location=agent_location,
                     cluster_radius=5,
-                    target_location=target,
+                    target_location=target_location,
                     walls=walls,
                 )
                 agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)

@@ -6,6 +6,10 @@ from src.worlds.abstract_location import AbstractLocation
 class Hexagon2DLocation(AbstractLocation):
     """Location on a plane of hexagons."""
 
+    @staticmethod
+    def of(coordinate: list[int]):
+        return Hexagon2DLocation(coordinate[0], coordinate[1])
+
     def __init__(self, row: int, column: int):
         """Creating an instance of a class by row and column.
 

@@ -5,6 +5,7 @@ import imageio
 
 from matplotlib import pyplot as plt
 
+from src.agents.abstract_agent import AbstractAgent
 from src.agents.simple_agent import SimpleAgent
 from src.behaviours.behaviour_macro import MacroBehaviour
 from src.behaviours.behaviour_meso import MesoBehaviour
@@ -14,13 +15,6 @@ from src.worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
 import matplotlib
 matplotlib.use("Agg")
-
-num_of_tiles_side: int
-num_of_steps: int
-agents = []
-agent_strategy = ""
-target: Hexagon2DLocation
-walls = []
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -35,75 +29,58 @@ def create_parser() -> argparse.ArgumentParser:
     return argument_parser
 
 
-def parse_configuration(configuration_data) -> None:
-    global num_of_tiles_side
-    num_of_tiles_side = configuration_data["num_of_tiles"]
-
-    global num_of_steps
-    num_of_steps = configuration_data["num_of_steps"]
-
-    global target
-    target_location = configuration_data["target_location"]
-    target = Hexagon2DLocation(target_location[0], target_location[1])
-
-    global agent_strategy
-    agent_strategy = configuration_data["type_of_strategy"]
-
-    global walls
-    for location in configuration_data["wall_locations"]:
-        walls.append(Hexagon2DLocation(location[0], location[1]))
-
-    agent_locations = []
-    for location in configuration_data["agent_locations"]:
-        agent_locations.append(Hexagon2DLocation(location[0], location[0]))
-    create_agents(agent_locations)
-
-
-def create_agents(agent_locations: []) -> None:
-    global agents, target, agent_strategy
-    if agent_strategy == "Micro":
+def create_agents(
+    agent_locations: list[Hexagon2DLocation],
+    target_location: Hexagon2DLocation,
+    walls: list[Hexagon2DLocation],
+    strategy: str
+) -> list[AbstractAgent]:
+    agents = []
+    if strategy == "Micro":
         for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+            range(len(agent_locations)),
+            agent_locations
         ):
             behaviour = MicroBehaviour(
                 agent_id=index,
                 agent_location=agent_location,
-                target_location=target,
+                target_location=target_location,
                 walls=walls,
             )
-            agents.append(
-                SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            )
-    elif agent_strategy == "Macro":
+            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+            agents.append(agent)
+    elif strategy == "Macro":
         for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+            range(len(agent_locations)),
+            agent_locations
         ):
             behaviour = MacroBehaviour(
                 agent_id=index,
                 cluster_id=0,
                 agent_location=agent_location,
-                target_location=target,
-                walls=[],
+                target_location=target_location,
+                walls=walls,
             )
-            agents.append(
-                SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            )
-    elif agent_strategy == "Meso":
+            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+            agents.append(agent)
+    elif strategy == "Meso":
         for index, agent_location in zip(
-                range(len(agent_locations)), agent_locations
+            range(len(agent_locations)),
+            agent_locations
         ):
             behaviour = MesoBehaviour(
                 agent_id=index,
                 agent_location=agent_location,
                 cluster_radius=5,
-                target_location=target,
+                target_location=target_location,
                 walls=walls,
             )
-            agents.append(
-                SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            )
+            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
+            agents.append(agent)
     else:
         raise ValueError("Incorrect agent strategy")
+
+    return agents
 
 
 def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> None:
@@ -113,7 +90,7 @@ def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> No
     imageio.mimsave(path_to_results + "/result.gif", images, duration=int(gif_duration))
 
 
-def create_result_graph(path_to_results: str):
+def create_result_graph(path_to_results: str, strategy: str):
     figure = plt.figure(figsize=(12, 5))
 
     sub_plot_accuracy = figure.add_subplot(1, 2, 1)
@@ -125,7 +102,7 @@ def create_result_graph(path_to_results: str):
         for value in file.read().replace("[", "").replace("]", "").replace(" ", "").split(","):
             x_value.append(int(value))
 
-    plt.plot(range(len(x_value)), x_value, label=agent_strategy)
+    plt.plot(range(len(x_value)), x_value, label=strategy)
     plt.legend(loc="upper right")
 
     sub_plot_diameter = figure.add_subplot(1, 2, 2)
@@ -137,21 +114,38 @@ def create_result_graph(path_to_results: str):
         for value in file.read().replace("[", "").replace("]", "").replace(" ", "").split(","):
             x_value.append(int(value))
 
-    plt.plot(range(len(x_value)), x_value, label=agent_strategy)
+    plt.plot(range(len(x_value)), x_value, label=strategy)
     plt.legend(loc="upper right")
 
     plt.savefig(path_to_results + f"/result_graph.png", transparent=False, facecolor="white", dpi=300)
 
 
-if __name__ == "__main__":
+def main():
     parser = create_parser()
-    args: argparse.Namespace = parser.parse_args(sys.argv[1:])
-
+    args = parser.parse_args(sys.argv[1:])
     print(args)
 
     with open(args.configuration_file, "r", encoding="utf-8") as file:
         configuration_data = json.load(file)
-    parse_configuration(configuration_data)
+
+    num_of_tiles_side = configuration_data["num_of_tiles"]
+    num_of_steps = configuration_data["num_of_steps"]
+    target_location = Hexagon2DLocation.of(configuration_data["target_location"])
+    strategy = configuration_data["type_of_strategy"]
+    walls = [
+        Hexagon2DLocation.of(location)
+        for location in configuration_data["wall_locations"]
+    ]
+    agent_locations = [
+        Hexagon2DLocation.of(location)
+        for location in configuration_data["agent_locations"]
+    ]
+    agents = create_agents(
+        agent_locations=agent_locations,
+        target_location=target_location,
+        walls=walls,
+        strategy=strategy
+    )
 
     simulation_world = Hexagon2DWorld(
         num_of_tiles_side=num_of_tiles_side,
@@ -162,7 +156,6 @@ if __name__ == "__main__":
         create_step_images=args.create_step_images
     )
     simulation_world.start()
-
     simulation_world.join()
 
     if bool(args.create_gif):
@@ -176,4 +169,8 @@ if __name__ == "__main__":
             print("Can't create gif: not created step images")
 
     if bool(args.create_result_graph):
-        create_result_graph(path_to_results=args.path_to_results)
+        create_result_graph(path_to_results=args.path_to_results, strategy=strategy)
+
+
+if __name__ == "__main__":
+    main()

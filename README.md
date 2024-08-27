@@ -13,14 +13,14 @@ pip install -r ./requirements.txt
 ```
 python application.py
 ```
-- The repository contains the configuration of simulation for example `/configurations/test_configuration`
+- The repository contains the configuration of simulation for example `/configurations/test_configuration.json`
 
 ### How to use with cmd
 - From root:
 ```
 python main.py
 ```
-- The repository contains the configuration of simulation for example `/configurations/test_configuration`
+- The repository contains the configuration of simulation for example `/configurations/test_configuration.json`
 - You can enter flags:
 	- `--configuration_file=relative/path/to/file`
 	- `--path_to_results=relative/path/to/results/folder`
