@@ -1,4 +1,6 @@
+import json
 import math
+import os
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
@@ -12,7 +14,12 @@ matplotlib.use('Agg')
 
 class Hexagon2DDrawer:
     def __init__(
-        self, num_of_titles_side: int, agents: list, walls: list, path_to_results: str, create_step_images: bool
+        self,
+        num_of_titles_side: int,
+        agents: list,
+        walls: list,
+        path_to_results: str,
+        create_step_images: bool
     ):
         self.path_to_results = path_to_results
         self.create_step_images = create_step_images
@@ -58,6 +65,8 @@ class Hexagon2DDrawer:
         self.steps = []
         self.accuracy = []
         self.diameter = []
+        self.num_of_clusters = []
+        self.avg_agents_in_cluster = []
         self.radius_centers = 0.7
 
     def draw_plane(self, num_steps: int, step: int):
@@ -93,24 +102,30 @@ class Hexagon2DDrawer:
         self.steps.append(step)
         self.accuracy.append(self.get_accuracy())
         self.diameter.append(self.get_diameter())
+        self.num_of_clusters.append(self.get_num_of_clusters())
+        self.avg_agents_in_cluster.append(len(self.agents) / self.get_num_of_clusters() * 1.0)
 
-        """plt.subplot(1, 2, 2)
-        plt.xlabel("Time steps")
-        plt.ylabel("Conventional units")
-        plt.xlim(-4, 134)
-        plt.ylim(-2, self.num_of_titles_side * len(agents))
-        plt.plot(self.steps, self.accuracy, "r-", label="Accuracy")
-        plt.plot(self.steps, self.max_diameter, "b-", label="Diameter")
-
-        plt.legend(loc="best")"""
+        # plt.subplot(1, 2, 2)
+        # plt.xlabel("Time steps")
+        # plt.ylabel("Conventional units")
+        # plt.xlim(-4, 134)
+        # plt.ylim(-2, self.num_of_titles_side * len(agents))
+        # plt.plot(self.steps, self.accuracy, "r-", label="Accuracy")
+        # plt.plot(self.steps, self.max_diameter, "b-", label="Diameter")
+        #
+        # plt.legend(loc="best")
 
         if step == num_steps - 1:
-            f = open(self.path_to_results + "/accuracy.txt", "w")
-            f.write(str(self.accuracy))
-            f.close()
-            f = open(self.path_to_results + "/diameter.txt", "w")
-            f.write(str(self.diameter))
-            f.close()
+            with open(self.path_to_results + "/result.json", "w") as file:
+                json_str = f'"accuracy": {self.accuracy},\
+                    "diameter": {self.diameter},\
+                    "num_of_clusters": {self.num_of_clusters},\
+                    "avg_agents_in_cluster": {self.avg_agents_in_cluster}'
+                json_data = json.loads("{" + json_str + "}")
+                json.dump(json_data, file, indent=2)
+
+        if not os.path.exists(self.path_to_results + "/img"):
+            os.mkdir(self.path_to_results + "/img")
 
         plt.savefig(self.path_to_results + f"/img/img_{step}.png", transparent=False, facecolor="white", dpi=300)
         plt.close()
@@ -194,20 +209,20 @@ class Hexagon2DDrawer:
             )
 
             if self.draw_center_cluster_label.count(cluster_id) == 0:
-                if cluster_id == 0:
-                    polygon.set_label("Agents without cluster")
-                else:
-                    polygon.set_label("Agents with cluster " + str(cluster_id))
+                # if cluster_id == 0:
+                #     polygon.set_label("Agents without cluster")
+                # else:
+                #     polygon.set_label("Agents with cluster " + str(cluster_id))
                 self.draw_center_cluster_label.append(cluster_id)
 
             sub_plot.add_patch(polygon)
 
-            """if self.num_of_titles_side < 35:
-                plt.text(
-                    (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) - 2 / self.num_of_titles_side,
-                    location.row * 0.75 - 2 / self.num_of_titles_side,
-                    agent.id,
-                )"""
+            # if self.num_of_titles_side < 35:
+            #     plt.text(
+            #         (location.column + (location.row % 2) / 2.0) * math.sin(math.pi / 3) - 2 / self.num_of_titles_side,
+            #         location.row * 0.75 - 2 / self.num_of_titles_side,
+            #         agent.id,
+            #     )
 
     def get_accuracy(self) -> int:
         sum_accuracy = 0
@@ -224,6 +239,20 @@ class Hexagon2DDrawer:
                     diameter = distance
 
         return diameter
+
+    def get_num_of_clusters(self) -> int:
+        try:
+            count = 0
+            cluster_ids = []
+            for agent in self.agents:
+                cluster_id = agent.behaviour.cluster_id
+                if cluster_ids.count(cluster_id) == 0:
+                    cluster_ids.append(cluster_id)
+                    count += 1
+
+            return count
+        except AttributeError:
+            return 1
 
     def draw_cluster_targets(self, sub_plot) -> None:
         try:

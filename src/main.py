@@ -89,17 +89,16 @@ def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> No
     imageio.mimsave(path_to_results + "/result.gif", images, duration=int(gif_duration))
 
 
-def create_result_graph(path_to_results: str, strategy: str):
+def create_accuracy_graph(path_to_results: str, strategy: str):
     figure = plt.figure(figsize=(12, 5))
 
     sub_plot_accuracy = figure.add_subplot(1, 2, 1)
     plt.xlabel("Step number", fontsize="xx-large")
     plt.ylabel("Accuracy", fontsize="xx-large")
 
-    x_value = []
-    with open(path_to_results + "/accuracy.txt", "r") as file:
-        for value in file.read().replace("[", "").replace("]", "").replace(" ", "").split(","):
-            x_value.append(int(value))
+    with open(path_to_results + "/result.json", "r") as file:
+        result = json.load(file)
+        x_value = [value for value in result["accuracy"]]
 
     plt.plot(range(len(x_value)), x_value, label=strategy)
     plt.legend(loc="upper right")
@@ -108,15 +107,42 @@ def create_result_graph(path_to_results: str, strategy: str):
     plt.xlabel("Step number", fontsize="xx-large")
     plt.ylabel("Diameter", fontsize="xx-large")
 
-    x_value = []
-    with open(path_to_results + "/diameter.txt", "r") as file:
-        for value in file.read().replace("[", "").replace("]", "").replace(" ", "").split(","):
-            x_value.append(int(value))
+    with open(path_to_results + "/result.json", "r") as file:
+        result = json.load(file)
+        x_value = [value for value in result["diameter"]]
 
     plt.plot(range(len(x_value)), x_value, label=strategy)
     plt.legend(loc="upper right")
 
-    plt.savefig(path_to_results + f"/result_graph.png", transparent=False, facecolor="white", dpi=300)
+    plt.savefig(path_to_results + f"/accuracy.svg", transparent=False, facecolor="white", dpi=300)
+
+
+def create_num_of_clusters_graph(path_to_results: str, strategy: str):
+    figure = plt.figure(figsize=(12, 5))
+
+    sub_plot_accuracy = figure.add_subplot(1, 2, 1)
+    plt.xlabel("Step number", fontsize="xx-large")
+    plt.ylabel("Number of clusters", fontsize="xx-large")
+
+    with open(path_to_results + "/result.json", "r") as file:
+        result = json.load(file)
+        x_value = [value for value in result["num_of_clusters"]]
+
+    plt.plot(range(len(x_value)), x_value, label=strategy)
+    plt.legend(loc="upper right")
+
+    sub_plot_diameter = figure.add_subplot(1, 2, 2)
+    plt.xlabel("Step number", fontsize="xx-large")
+    plt.ylabel("Average number of agents in cluster", fontsize="xx-large")
+
+    with open(path_to_results + "/result.json", "r") as file:
+        result = json.load(file)
+        x_value = [value for value in result["avg_agents_in_cluster"]]
+
+    plt.plot(range(len(x_value)), x_value, label=strategy)
+    plt.legend(loc="upper right")
+
+    plt.savefig(path_to_results + f"/num_of_clusters.svg", transparent=False, facecolor="white", dpi=300)
 
 
 def main():
@@ -168,7 +194,8 @@ def main():
             print("Can't create gif: not created step images")
 
     if bool(args.create_result_graph):
-        create_result_graph(path_to_results=args.path_to_results, strategy=strategy)
+        create_accuracy_graph(path_to_results=args.path_to_results, strategy=strategy)
+        create_num_of_clusters_graph(path_to_results=args.path_to_results, strategy=strategy)
 
 
 if __name__ == "__main__":
