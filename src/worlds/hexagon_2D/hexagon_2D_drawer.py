@@ -70,9 +70,8 @@ class Hexagon2DDrawer:
         self.radius_centers = 0.7
 
     def draw_plane(self, num_steps: int, step: int):
-        figure = plt.figure(figsize=(8, 8))
-        # figure = plt.figure(figsize=(6, 6))
-        # sub_plot = figure.add_subplot(1, 2, 1)
+        # figure = plt.figure(figsize=(8, 8))
+        figure = plt.figure(figsize=(6, 6))
         sub_plot = figure.add_subplot()
 
         if self.num_of_titles_side > 60:
@@ -128,6 +127,7 @@ class Hexagon2DDrawer:
             os.mkdir(self.path_to_results + "/img")
 
         plt.savefig(self.path_to_results + f"/img/img_{step}.png", transparent=False, facecolor="white", dpi=300)
+        plt.savefig(self.path_to_results + f"/img/img_{step}.svg", transparent=False, facecolor="white", dpi=300)
         plt.close()
         self.draw_center_cluster_label.clear()
         self.draw_center_cluster_location.clear()
