@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 import imageio
 
@@ -172,21 +173,26 @@ def main():
         strategy=strategy
     )
 
+    path_to_results = args.path_to_results + "/" + strategy
     simulation_world = Hexagon2DWorld(
         num_of_tiles_side=num_of_tiles_side,
         agents=agents,
         num_steps=num_of_steps,
         walls=walls,
-        path_to_results=args.path_to_results,
+        path_to_results=path_to_results,
         create_step_images=args.create_step_images
     )
+
+    if not os.path.exists(path_to_results):
+        os.mkdir(path_to_results)
+
     simulation_world.start()
     simulation_world.join()
 
     if bool(args.create_gif):
         if bool(args.create_step_images):
             create_gif(
-                path_to_results=args.path_to_results,
+                path_to_results=path_to_results,
                 gif_duration=args.gif_duration,
                 num_of_steps=num_of_steps
             )
@@ -194,8 +200,8 @@ def main():
             print("Can't create gif: not created step images")
 
     if bool(args.create_result_graph):
-        create_accuracy_graph(path_to_results=args.path_to_results, strategy=strategy)
-        create_num_of_clusters_graph(path_to_results=args.path_to_results, strategy=strategy)
+        create_accuracy_graph(path_to_results=path_to_results, strategy=strategy)
+        create_num_of_clusters_graph(path_to_results=path_to_results, strategy=strategy)
 
 
 if __name__ == "__main__":
