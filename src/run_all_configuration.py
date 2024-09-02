@@ -1,3 +1,4 @@
+import os.path
 import subprocess
 
 
@@ -11,6 +12,8 @@ def main():
         "./configurations/40_agents_vers5.json",
         "./configurations/40_agents_vers6.json"
     ]:
+        if not os.path.exists(f"./result/{i}"):
+            os.mkdir(f"./result/{i}")
         subprocess.call(
             [
                 "python",
@@ -18,9 +21,11 @@ def main():
                 f"--configuration_file={configuration}",
                 f"--path_to_results=./result/{i}",
                 "--create_result_graph=False",
-                "--create_step_images=False"
+                "--create_step_images=False",
+                "--create_gif=False"
             ]
         )
+        i += 1
 
 
 if __name__ == "__main__":

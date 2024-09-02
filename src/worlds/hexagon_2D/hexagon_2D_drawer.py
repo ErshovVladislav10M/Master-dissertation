@@ -69,7 +69,12 @@ class Hexagon2DDrawer:
         self.avg_agents_in_cluster = []
         self.radius_centers = 0.7
 
-    def draw_plane(self, num_steps: int, step: int):
+    def draw_plane(self, num_steps: int, step: int) -> None:
+        self.write_result(num_steps, step)
+
+        if self.create_step_images == "False":
+            return
+
         # figure = plt.figure(figsize=(8, 8))
         figure = plt.figure(figsize=(5, 5))
         figure.subplots_adjust(left=0.01, bottom=0.005, top=0.99, right=0.99)
@@ -116,15 +121,6 @@ class Hexagon2DDrawer:
         #
         # plt.legend(loc="best")
 
-        if step == num_steps - 1:
-            with open(self.path_to_results + "/result.json", "w") as file:
-                json_str = f'"accuracy": {self.accuracy},\
-                    "diameter": {self.diameter},\
-                    "num_of_clusters": {self.num_of_clusters},\
-                    "avg_agents_in_cluster": {self.avg_agents_in_cluster}'
-                json_data = json.loads("{" + json_str + "}")
-                json.dump(json_data, file, indent=2)
-
         if not os.path.exists(self.path_to_results + "/img"):
             os.mkdir(self.path_to_results + "/img")
 
@@ -135,6 +131,22 @@ class Hexagon2DDrawer:
         self.draw_center_cluster_label.clear()
         self.draw_center_cluster_location.clear()
         self.draw_cluster_area_label.clear()
+
+    def write_result(self, num_steps: int, step: int) -> None:
+        self.steps.append(step)
+        self.accuracy.append(self.get_accuracy())
+        self.diameter.append(self.get_diameter())
+        self.num_of_clusters.append(self.get_num_of_clusters())
+        self.avg_agents_in_cluster.append(len(self.agents) / self.get_num_of_clusters() * 1.0)
+
+        if step == num_steps - 1:
+            with open(self.path_to_results + "/result.json", "w") as file:
+                json_str = f'"accuracy": {self.accuracy},\
+                    "diameter": {self.diameter},\
+                    "num_of_clusters": {self.num_of_clusters},\
+                    "avg_agents_in_cluster": {self.avg_agents_in_cluster}'
+                json_data = json.loads("{" + json_str + "}")
+                json.dump(json_data, file, indent=2)
 
     def draw_hexagon_area(self, sup_plot):
         for i in range(0, self.num_of_titles_side):

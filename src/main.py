@@ -189,8 +189,8 @@ def main():
     simulation_world.start()
     simulation_world.join()
 
-    if bool(args.create_gif):
-        if bool(args.create_step_images):
+    if args.create_gif == "True":
+        if args.create_step_images == "True":
             create_gif(
                 path_to_results=path_to_results,
                 gif_duration=args.gif_duration,
@@ -199,7 +199,7 @@ def main():
         else:
             print("Can't create gif: not created step images")
 
-    if bool(args.create_result_graph):
+    if args.create_result_graph == "True":
         create_accuracy_graph(path_to_results=path_to_results, strategy=strategy)
         create_num_of_clusters_graph(path_to_results=path_to_results, strategy=strategy)
 
