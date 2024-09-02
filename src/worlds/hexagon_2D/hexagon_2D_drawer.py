@@ -90,7 +90,7 @@ class Hexagon2DDrawer:
         self.draw_center_system(sub_plot)
         self.draw_agents(sub_plot)
 
-        plt.xlabel("Step number: " + str(step), fontsize="xx-large")
+        # plt.xlabel("Step number: " + str(step), fontsize="xx-large")
         sub_plot.set(
             xlim=(-1.5 * math.sin(math.pi / 3), (self.num_of_titles_side + 1) * math.sin(math.pi / 3)),
             ylim=(-1.5, self.num_of_titles_side * math.sin(math.pi / 3)),
