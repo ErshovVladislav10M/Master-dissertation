@@ -257,3 +257,6 @@ class Hexagon2DLocation(AbstractLocation):
 
     def __mul__(self, num: int):
         return Hexagon2DLocation(self.row * num, self.column * num)
+
+    def __str__(self):
+        return f"[{self.row}, {self.column}]"

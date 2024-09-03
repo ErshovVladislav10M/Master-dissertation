@@ -2,18 +2,16 @@ import argparse
 import json
 import os
 import sys
-import imageio
 
+import imageio
+import matplotlib
 from matplotlib import pyplot as plt
 
 from src.agents.simple_agent import SimpleAgent
-from src.behaviours.behaviour_macro import MacroBehaviour
-from src.behaviours.behaviour_meso import MesoBehaviour
-from src.behaviours.behaviour_micro import MicroBehaviour
+from src.behaviours.behaviour_utils import create_behaviours
 from src.worlds.hexagon_2D.hexagon_2D_location import Hexagon2DLocation
 from src.worlds.hexagon_2D.hexagon_2D_world import Hexagon2DWorld
 
-import matplotlib
 matplotlib.use("Agg")
 
 
@@ -35,52 +33,11 @@ def create_agents(
     walls: list[Hexagon2DLocation],
     strategy: str
 ) -> list[SimpleAgent]:
-    agents = []
-    if strategy == "Micro":
-        for index, agent_location in zip(
-            range(len(agent_locations)),
-            agent_locations
-        ):
-            behaviour = MicroBehaviour(
-                agent_id=index,
-                agent_location=agent_location,
-                target_location=target_location,
-                walls=walls,
-            )
-            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            agents.append(agent)
-    elif strategy == "Macro":
-        for index, agent_location in zip(
-            range(len(agent_locations)),
-            agent_locations
-        ):
-            behaviour = MacroBehaviour(
-                agent_id=index,
-                cluster_id=0,
-                agent_location=agent_location,
-                target_location=target_location,
-                walls=walls,
-            )
-            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            agents.append(agent)
-    elif strategy == "Meso":
-        for index, agent_location in zip(
-            range(len(agent_locations)),
-            agent_locations
-        ):
-            behaviour = MesoBehaviour(
-                agent_id=index,
-                agent_location=agent_location,
-                cluster_radius=9,
-                target_location=target_location,
-                walls=walls,
-            )
-            agent = SimpleAgent(agent_id=index, cluster_id=0, behaviour=behaviour)
-            agents.append(agent)
-    else:
-        raise ValueError("Incorrect agent strategy")
-
-    return agents
+    behaviours = create_behaviours(agent_locations, target_location, walls, strategy)
+    return [
+        SimpleAgent(agent_id=i, cluster_id=0, behaviour=behaviour)
+        for i, behaviour in zip(range(len(behaviours)), behaviours)
+    ]
 
 
 def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> None:

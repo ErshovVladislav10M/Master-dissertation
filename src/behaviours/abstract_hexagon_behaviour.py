@@ -8,7 +8,11 @@ class AbstractHexagonBehaviour(AbstractBehaviour, ABC):
     """Behavior implementing abstract behaviour for hexagon world."""
 
     def __init__(
-        self, agent_id: int, agent_location: Hexagon2DLocation, target_location: Hexagon2DLocation, walls: list
+        self,
+        agent_id: int,
+        agent_location: Hexagon2DLocation,
+        target_location: Hexagon2DLocation,
+        walls: list
     ):
         """Creating an instance of a class with agent id, location and target.
 
