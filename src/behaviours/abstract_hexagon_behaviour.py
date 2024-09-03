@@ -75,3 +75,6 @@ class AbstractHexagonBehaviour(AbstractBehaviour, ABC):
     def reset(self) -> None:
         """Reset clustering settings."""
         pass
+
+    def get_next_move(self) -> Hexagon2DLocation:
+        return self.next_move

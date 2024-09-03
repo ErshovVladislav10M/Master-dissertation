@@ -105,3 +105,9 @@ class MPCBehaviour(AbstractHexagonBehaviour):
 
     def reset(self) -> None:
         pass
+
+    def get_next_move(self) -> Hexagon2DLocation:
+        if len(self.next_moves) > 0:
+            return self.next_moves[0]
+
+        return Hexagon2DLocation(0, 0)

@@ -64,7 +64,7 @@ class Hexagon2DWorld(AbstractWorld):
             if agent_behaviour.num_penalty_step > 0:
                 required_locations.append(agent_behaviour.agent_location)
             else:
-                required_locations.append(agent_behaviour.agent_location + agent_behaviour.next_move)
+                required_locations.append(agent_behaviour.agent_location + agent_behaviour.get_next_move())
 
         return required_locations
 

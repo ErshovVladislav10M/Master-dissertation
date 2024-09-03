@@ -45,7 +45,7 @@
     [56, 92]
   ],
   "target_location": [50, 15],
-  "type_of_strategy": "Meso",
+  "type_of_strategy": "MPC",
   "wall_locations": [
     [60, 66],
     [59, 66],
