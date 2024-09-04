@@ -48,9 +48,9 @@ def create_gif(path_to_results: str, gif_duration: str, num_of_steps: int) -> No
 
 
 def create_accuracy_graph(path_to_results: str, strategy: str):
-    figure = plt.figure(figsize=(12, 5))
+    figure = plt.figure(figsize=(18, 5))
 
-    sub_plot_accuracy = figure.add_subplot(1, 2, 1)
+    sub_plot_accuracy = figure.add_subplot(1, 3, 1)
     plt.xlabel("Step number", fontsize="xx-large")
     plt.ylabel("Accuracy", fontsize="xx-large")
 
@@ -59,9 +59,8 @@ def create_accuracy_graph(path_to_results: str, strategy: str):
         x_value = [value for value in result["accuracy"]]
 
     plt.plot(range(len(x_value)), x_value, label=strategy)
-    plt.legend(loc="upper right")
 
-    sub_plot_diameter = figure.add_subplot(1, 2, 2)
+    sub_plot_diameter = figure.add_subplot(1, 3, 2)
     plt.xlabel("Step number", fontsize="xx-large")
     plt.ylabel("Diameter", fontsize="xx-large")
 
@@ -70,37 +69,20 @@ def create_accuracy_graph(path_to_results: str, strategy: str):
         x_value = [value for value in result["diameter"]]
 
     plt.plot(range(len(x_value)), x_value, label=strategy)
-    plt.legend(loc="upper right")
 
-    plt.savefig(path_to_results + f"/accuracy.svg", transparent=False, facecolor="white", dpi=300)
-
-
-def create_num_of_clusters_graph(path_to_results: str, strategy: str):
-    figure = plt.figure(figsize=(12, 5))
-
-    sub_plot_accuracy = figure.add_subplot(1, 2, 1)
+    sub_plot_num_of_clusters = figure.add_subplot(1, 3, 3)
     plt.xlabel("Step number", fontsize="xx-large")
     plt.ylabel("Number of clusters", fontsize="xx-large")
 
-    with open(path_to_results + "/result.json", "r") as file:
-        result = json.load(file)
-        x_value = [value for value in result["num_of_clusters"]]
+    if strategy == "Meso":
+        with open(path_to_results + "/result.json", "r") as file:
+            result = json.load(file)
+            x_value = [value for value in result["num_of_clusters"]]
 
-    plt.plot(range(len(x_value)), x_value, label=strategy)
+        plt.plot(range(len(x_value)), x_value, label=strategy)
+
     plt.legend(loc="upper right")
-
-    sub_plot_diameter = figure.add_subplot(1, 2, 2)
-    plt.xlabel("Step number", fontsize="xx-large")
-    plt.ylabel("Average number of agents in cluster", fontsize="xx-large")
-
-    with open(path_to_results + "/result.json", "r") as file:
-        result = json.load(file)
-        x_value = [value for value in result["avg_agents_in_cluster"]]
-
-    plt.plot(range(len(x_value)), x_value, label=strategy)
-    plt.legend(loc="upper right")
-
-    plt.savefig(path_to_results + f"/num_of_clusters.svg", transparent=False, facecolor="white", dpi=300)
+    plt.savefig(path_to_results + f"/accuracy.svg", transparent=False, facecolor="white", dpi=300)
 
 
 def main():
@@ -158,7 +140,6 @@ def main():
 
     if args.create_result_graph == "True":
         create_accuracy_graph(path_to_results=path_to_results, strategy=strategy)
-        create_num_of_clusters_graph(path_to_results=path_to_results, strategy=strategy)
 
 
 if __name__ == "__main__":
