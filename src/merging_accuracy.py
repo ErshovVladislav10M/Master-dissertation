@@ -60,7 +60,6 @@ def main():
     print(args)
 
     create_accuracy_graph(path_to_results=args.path_to_results)
-    # create_num_of_clusters_graph(path_to_results=args.path_to_results)
 
 
 if __name__ == "__main__":

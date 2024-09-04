@@ -20,7 +20,7 @@ def main():
                 "main.py",
                 f"--configuration_file={configuration}",
                 f"--path_to_results=./result/{i}",
-                "--create_result_graph=False",
+                "--create_result_graph=True",
                 "--create_step_images=False",
                 "--create_gif=False"
             ]
