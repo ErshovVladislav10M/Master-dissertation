@@ -84,15 +84,16 @@ class MPCBehaviour(AbstractHexagonBehaviour):
         ]
 
         next_move = self.next_moves[0] * -1
+        self.next_moves.clear()
         for move in possible_moves:
             distance_after_next_move = self.target_location.get_distance(self.agent_location + next_move)
             distance_after_move = self.target_location.get_distance(self.agent_location + move)
 
             if distance_after_next_move > distance_after_move or \
                 distance_after_next_move == distance_after_move and random() > 0.5:
-                self.next_moves.pop(0)
-                self.next_moves.append(move)
                 next_move = move
+
+        self.next_moves.append(next_move)
 
     def define_cluster_target(self, messages) -> None:
         pass

@@ -39,6 +39,8 @@ class Hexagon2DWorld(AbstractWorld):
         """Correct action for all agents."""
         for agent in self.agents:
             agent.behaviour.correct_next_move()
+            self.all_messages[agent.id] = agent.get_message()
+            self.sent_messages()
 
     def do_agent_action(self) -> None:
         """Do action for all agents."""
